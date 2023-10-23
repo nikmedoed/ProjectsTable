@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden; /* Предотвращаем появление полосы прокрутки */
+    }
+
+    .date-picker {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .date-row {
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between; /* Выравниваем пространство между элементами */
+      width: 100%; /* Задаем ширину, чтобы использовать все доступное пространство */
+    }
+
+    label {
+      margin-right: 10px;
+      font-weight: normal; /* Убираем жирное начертание */
+      white-space: nowrap; /* Предотвращаем перенос текста на новую строку */
+    }
+
+    h1 {
+      font-size: 24px;
+      margin-bottom: 15px;
+    }
+
+    #endDate, #startDate {
+      border: none;
+      border-bottom: 2px solid #4285f4;
+      outline: none;
+      font-size: 16px;
+      padding: 5px 10px;
+      transition: border-color 0.3s;
+      width: 130px
+    }
+
+    #endDate:focus, #startDate:focus {
+      border-bottom-color: #0f9d58;
+    }
+
+    button {
+      background-color: #4285f4;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 18px; /* Увеличиваем размер текста на кнопке */
+      transition: background-color 0.3s;
+    }
+
+    button:hover {
+      background-color: #0f9d58;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="date-picker">
+    <h1>Выберите новые границы</h1> <!-- Используем заголовок -->
+    <div class="date-row">
+      <label for="startDate">Начало таймлайна:</label>
+      <input type="date" id="startDate" max="<?= startDate ?>">
+    </div>
+    <div class="date-row">
+      <label for="endDate">Окончание таймлайна:</label>
+      <input type="date" id="endDate" min="<?= endDate ?>">
+    </div>
+    <button onclick="submitDate()">Расширить</button>
+  </div>
+  <script>
+    function submitDate() {
+      var start = document.getElementById("startDate").value;
+      var end = document.getElementById("endDate").value;
+      google.script.run.extendTimeline(start, end);
+      google.script.host.close();
+    }
+  </script>
+</body>
+
+</html>
