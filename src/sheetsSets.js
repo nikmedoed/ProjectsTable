@@ -3,14 +3,16 @@ const TEMPLATE_MAP = "Карта проекта"
 const TEMPLATE_BLOCK = "Шаблон блока";
 
 const DYNAMIC_GRAPH = "Динамика"
-const STATUS_GRAPH = "Динамика"
+const STATUS_GRAPH = "Статус"
 
 const COMMANDO = "Команда"
 const TEMPLORARY = "Текущие задачи"
 
 function getBlockSheets() {
   let sheets = SSheet.getSheets();
-  const excludedSheetNames = new Set([INIT_PAGE, TEMPLATE_MAP, TEMPLATE_BLOCK, DYNAMIC_DATA, DYNAMIC_GRAPH, COMMANDO, TEMPLORARY]);
+  const excludedSheetNames = new Set([
+    INIT_PAGE, TEMPLATE_MAP, TEMPLATE_BLOCK, DYNAMIC_GRAPH, STATUS_GRAPH, COMMANDO, TEMPLORARY
+  ]);
 
   if (!RELEASE) {
     sheets = sheets.filter(sheet => !sheet.getName().startsWith("!"));

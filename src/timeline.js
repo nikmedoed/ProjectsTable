@@ -2,8 +2,7 @@ const TAG_TIMELINE = "{{timeline}}"
 
 
 function drawDefaultTimeline(sheet = SSheet.getSheetByName("Карта проекта (копия)")) {
-  let borders = findTimelineBorders(sheet)
-  drawTimeline(sheet, borders.row, borders.col)
+  generateTimeline(sheet)
 }
 
 
@@ -12,40 +11,12 @@ function extendTimeline(startDate, endDate) {
   endDate = new Date(endDate);
   Logger.log(startDate)
   Logger.log(endDate)
-  // for (let s of getTimelineSheets()) {
-  //   let borders = findTimelineBorders(s)
-  //   drawTimeline(s, borders.row, borders.col, startDate, dateObj)
-  // }
+  for (let s of getTimelineSheets()) {
+    generateTimeline(s, startDate, endDate)
+  }
 }
 
 
-/**
- * Функция для поиска границ таймлайна на указанном листе Google Таблицы. (правый верхний угол)
- * 
- * @function findTimelineBorders
- * @param {GoogleAppsScript.Spreadsheet.Sheet} sheet - Объект листа, на котором необходимо найти таймлайн.
- * 
- * @returns {Object} - Объект, содержащий информацию о расположении таймлайна.
- * @returns {number} Object.row - Номер строки, в которой начинается таймлайн.
- * @returns {number} Object.col - Номер столбца, в котором заканчивается таймлайн.
- * @returns {boolean} Object.isNew - Флаг, указывающий, является ли таймлайн новым (определяется по наличию маркера "{{timeline}}").
- * 
- * @throws {Error} Если таймлайн не удалось найти на листе.
- * 
- * @example
- * // Нахождение границ таймлайна на активном листе.
- * let borders = findTimelineBorders(SpreadsheetApp.getActiveSpreadsheet().getActiveSheet());
- * Logger.log(`Таймлайн начинается с строки ${borders.row} и заканчивается в столбце ${borders.col}. Новый: ${borders.isNew}`);
- * 
- * @description
- * Функция сканирует указанный лист, начиная с верхнего левого угла (A1), и ищет границы таймлайна по следующим критериям:
- * - Если в ячейке встречается строка "{{timeline}}", то считается, что найден новый таймлайн.
- * - Если подряд идут две строки, в которых присутствуют объекты Date, определённым образом расположенные, то считается, что найден существующий таймлайн.
- *   Детальные условия расположения объектов Date определяются кодом функции.
- * 
- * Если таймлайн обнаружен, функция возвращает объект с информацией о его расположении.
- * Если таймлайн не обнаружен, функция генерирует исключение с сообщением об ошибке.
- */
 function findTimelineBorders(sheet) {
   let data = sheet.getSheetValues(1, 1, sheet.getMaxRows(), sheet.getMaxColumns());
 
@@ -59,17 +30,19 @@ function findTimelineBorders(sheet) {
     }
 
     if (firstLine.some(cell => cell instanceof Date) && secondLine.some(cell => cell instanceof Date)) {
-      let startDateCol, endDateCol;
+      let startDateCol, endDateCol, startDate, endDate;
       for (let j = 0; j < firstLine.length; j++) {
         let secIsDate = secondLine[j] instanceof Date
         let fisIsDate = firstLine[j] instanceof Date
         if (!startDateCol && secIsDate && fisIsDate) {
           startDateCol = j;
+          startDate = secondLine[j]
         }
         if (startDateCol && !(secIsDate && (fisIsDate || !firstLine[j]))) {
           break
         }
         endDateCol = j;
+        endDate = secondLine[j]
       }
       if (endDateCol > startDateCol) {
         return {
@@ -77,7 +50,9 @@ function findTimelineBorders(sheet) {
           endRow: i + 2,
           startCol: startDateCol + 1,
           col: endDateCol + 1,
-          isNew: false
+          isNew: false,
+          startDate,
+          endDate
         };
       }
     }
@@ -86,39 +61,56 @@ function findTimelineBorders(sheet) {
 }
 
 
-function drawTimLeft() {
-  let sheet = SSheet.getSheetByName('fff (копия)')
+function generateTimeline(sheet, startDate, endDate) {
   let borders = findTimelineBorders(sheet)
-  const date = new Date(2023, 6, 6);
-  drawTimeline(sheet, borders.row, borders.startCol, date)
+  sheet = typeof sheet === 'string' ? SSheet.getSheetByName(sheet) : sheet
+  if (borders.isNew || endDate > borders.endDate) {
+    insertRight(sheet, startDate, endDate, borders)
+  }
+  if (!borders.isNew && startDate < borders.startDate) {
+    insertLeft(sheet, startDate, borders)
+  }
+}
+
+function insertLeft(sheet, startDate, borders) {
+  let timelineRow = borders.row
+  let timelineColumn = borders.startCol
+  let endDate = borders.startDate
+  let undelete = 0
+  let cell = sheet.getRange(timelineRow, timelineColumn).getCell(1, 1)
+  if (cell.isPartOfMerge()) {
+    let mergedRange = cell.getMergedRanges()[0];
+    let endColumn = mergedRange.getColumn() + mergedRange.getNumColumns() - 1;
+    undelete = mergedRange.getNumColumns() - 1
+    endDate = sheet.getRange(timelineRow + 1, endColumn, 1, 1).getValue()
+  }
+
+  const day = 24 * 60 * 60 * 1000;
+  const week = 7 * day;
+  let diffWeeks = Math.ceil((endDate - startDate) / week);
+  startDate = new Date(endDate - diffWeeks * week);
+  const columnsInsert = diffWeeks - undelete;
+
+  if (columnsInsert <= 0) { return }
+  sheet.insertColumnsAfter(timelineColumn, columnsInsert)
+
+  if (sheet.getName() != TEMPLATE_MAP) {
+    const dataStartRow = borders.endRow + 2
+    const length = sheet.getLastRow() - dataStartRow + 1
+    let source = sheet.getRange(dataStartRow, timelineColumn, length, 1)
+    sheet.getRange(dataStartRow, timelineColumn + columnsInsert, length, 1).setValues(source.getValues());
+    source.clearContent();
+    cell.setValue(TAG_TIMELINE)
+  }
+
+  drawTimeline(sheet, timelineRow, timelineColumn, startDate, endDate)
+  storeTimelineStartDate(startDate)
 }
 
 
-/**
- * Функция для отрисовки таймлайна на Google Таблице с использованием Google Apps Script.
- *
- * @param {GoogleAppsScript.Spreadsheet.Sheet|string} sheet - Объект листа таблицы или имя листа,
- *  на котором должен быть отрисован таймлайн.
- * @param {number} timelineRow - Номер строки, начиная с которой будет отрисовываться таймлайн.
- * @param {number} timelineColumn - Номер столбца, с которого начнется отрисовка таймлайна.
- * @param {Date} [startDate=new Date()] - Начальная дата таймлайна. Если не указана, используется текущая дата.
- * @param {Date} [endDate=new Date(Date.now() + 120*24*60*60*1000)] - Конечная дата таймлайна.
- *  Если не указана, используется текущая дата плюс 120 дней.
- * @param {number} [height_higlight=2] - Высота подсветки заголовка таймлайна в строках.
- * 
- * @example
- * // Отрисовка таймлайна на активном листе начиная с 2 строки и 1 колонки,
- * // с начальной датой 2023-01-01 и конечной 2023-04-30.
- * drawTimeline(SpreadsheetApp.getActiveSpreadsheet().getActiveSheet(), 2, 1, new Date('2023-01-01'), new Date('2023-04-30'));
- *
- * @throws {Error} Если переданное имя листа не существует.
- * @throws {TypeError} Если типы переданных параметров не соответствуют ожидаемым.
- * 
- * @returns {void}
- */
-function drawTimeline(sheet, timelineRow, timelineColumn, startDate, endDate, height_higlight = 2) {
-  sheet = typeof sheet === 'string' ? SSheet.getSheetByName(sheet) : sheet
-
+function insertRight(sheet, startDate, endDate, borders) {
+  let timelineRow = borders.row
+  let timelineColumn = borders.col
   const initTimelineColumn = timelineColumn
   let undelete = 0
   let cell = sheet.getRange(timelineRow, timelineColumn).getCell(1, 1)
@@ -134,37 +126,43 @@ function drawTimeline(sheet, timelineRow, timelineColumn, startDate, endDate, he
       startDate = new Date(cellValue);
     }
   }
+  const day = 24 * 60 * 60 * 1000
   startDate = startDate || getTimelineStartDate() || new Date()
+  endDate = endDate || getTimelineEndDate() || new Date(Date.now() + 120 * day);
 
-  endDate = endDate || getTimelineEndDate() || new Date(Date.now() + 120 * 24 * 60 * 60 * 1000);
-  endDate = addSeven(endDate)
+  const columnsInsert = Math.floor((endDate - startDate) / (7 * day)) - undelete + 1
+  if (columnsInsert <= 0) { return }
+  sheet.insertColumnsAfter(initTimelineColumn, columnsInsert)
+  drawTimeline(sheet, timelineRow, timelineColumn, startDate, endDate)
+  storeTimelineEndDate(endDate)
 
+}
+
+
+function drawTimeline(sheet, timelineRow, timelineColumn, startDate, endDate) {
   let dates = []
-  let count = 0
+
+  endDate = addSeven(endDate)
   while (startDate < endDate) {
     dates.push(startDate)
-    count++
     startDate = addSeven(startDate)
   }
 
-  if (dates.length - 1 - undelete <= 0) {
-    return
-  }
-
+  let cell = sheet.getRange(timelineRow, timelineColumn).getCell(1, 1)
   let formulas = [dates]
+  let borderHeight = 2
   if (sheet.getName() != TEMPLATE_MAP) {
-    formulas.push(new Array(count).fill('=IF(INDIRECT("R[-1]C[0]"; FALSE)>TODAY();""; (SUM(INDIRECT("R[1]C[0]:R[900048576]C[0]"; FALSE)) + COUNTIF( INDIRECT("R[1]C[" & 10 - COLUMN() & "]:R[900048576]C[-1]"; FALSE);1 )) / $J$5)'))
+    borderHeight = sheet.getLastColumn() - timelineRow + 1
+    formulas.push(new Array(dates.length).fill('=IF(INDIRECT("R[-1]C[0]"; FALSE)>TODAY();""; (SUM(INDIRECT("R[1]C[0]:R[900048576]C[0]"; FALSE)) + COUNTIF( INDIRECT("R[1]C[" & 10 - COLUMN() & "]:R[900048576]C[-1]"; FALSE);1 )) / $J$5)'))
 
     if (cell.getValue() == TAG_TIMELINE) {
       formulas[1][0] = '=IF(J$7>TODAY();"";(SUM(J9:J) / COUNTIF($C9:$C;TRUE)))'
     }
   }
 
-  sheet.insertColumnsAfter(initTimelineColumn, dates.length - 1 - undelete)
   let dRange = sheet.getRange(timelineRow + 1, timelineColumn, formulas.length, dates.length)
     .setValues(formulas)
   setBackHeader(setBorder(dRange))
-
   sheet.getRange(timelineRow, timelineColumn, 1, dates.length).getMergedRanges().forEach(mr => mr.breakApart())
   let currentMonth = dates[0].getMonth();
   let monthStartIndex = 0;
@@ -174,6 +172,7 @@ function drawTimeline(sheet, timelineRow, timelineColumn, startDate, endDate, he
     if (i === dates.length - 1) { i++ }
     if (i === dates.length || tempMonth !== currentMonth) {
       let monthRangeLength = i - monthStartIndex;
+
       let range = sheet.getRange(timelineRow, timelineColumn + monthStartIndex, 1, monthRangeLength);
       range.setValue(new Date(dates[monthStartIndex].getFullYear(), currentMonth, 1));
       if (monthRangeLength > 1) {
@@ -182,7 +181,7 @@ function drawTimeline(sheet, timelineRow, timelineColumn, startDate, endDate, he
       setRowStyleMain(range)
       range.setNumberFormat("mmm yy");
 
-      setBlockBorder(sheet.getRange(timelineRow, timelineColumn + monthStartIndex, height_higlight, monthRangeLength))
+      setBlockBorder(sheet.getRange(timelineRow, timelineColumn + monthStartIndex, borderHeight, monthRangeLength))
 
       if (i !== dates.length) {
         currentMonth = tempMonth
@@ -190,8 +189,6 @@ function drawTimeline(sheet, timelineRow, timelineColumn, startDate, endDate, he
       }
     }
   }
-
-  storeTimelineEndDate(endDate)
 }
 
 function addSeven(date) {
