@@ -19,7 +19,7 @@ function newBlockRow(projectMap) {
   if (rowIndexToAdd > projectMap.getLastRow()) {
     projectMap.appendRow([""])
   } else {
-    projectMap.insertRows(rowIndexToAdd);
+    projectMap.insertRowAfter(rowIndexToAdd);
   }
   return rowIndexToAdd
 }
@@ -44,6 +44,9 @@ function createNewBlock(name, template = null, projectMap = null) {
     blockName: name
   })
 
+  newSheet.showSheet()
+  SSheet.setActiveSheet(newSheet);
+
   const codeCellAddress = replaces.code[0].getA1Notation();
   const nameCellAddress = replaces.blockName[0].getA1Notation();
   const dataRow = replaces.blockName[0].getRow()
@@ -57,8 +60,12 @@ function createNewBlock(name, template = null, projectMap = null) {
     `=${sname}!G${dataRow}`, // Дата начала
     `=${sname}!H${dataRow}`, // Дата завершения
     `=${sname}!I${dataRow}`, // Состояние
+    // Первая версия, не самая оптимальная
     // `=ARRAYFORMULA(FILTER('${name}'!J${dataRow}:${dataRow}; ISNUMBER('${name}'!J${dataRow - 1}:${dataRow - 1})))`
-    `=QUERY(${sname}!J${dataRow}:INDEX(${sname}!${dataRow}:${dataRow}; MATCH(1E+30; ${sname}!J${dataRow - 1}:${dataRow - 1})); "select *")`
+    // Оптимальная версия, но с фиксацией на первую колонкку
+    `=QUERY(${sname}!J${dataRow}:INDEX(${sname}!${dataRow}:${dataRow}; MATCH(1E+30; ${sname}!J${dataRow - 1}:${dataRow - 1})); "select *")`,
+    // Версия с точными ссылками
+    // `=QUERY(INDIRECT("${sname}!J${dataRow}:" & ADDRESS(${dataRow}; MATCH(1E+30; INDIRECT("${sname}!J${dataRow - 1}:${dataRow - 1}")))); "select *")`
   ]
   var newRange = projectMap.getRange(newBlockIndex, 1, 1, newBlockValues.length);
   newRange.setValues([newBlockValues])
