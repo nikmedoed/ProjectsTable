@@ -4,6 +4,37 @@ const DEFAULT_VALUE = "";
 const SSheet = SpreadsheetApp.getActiveSpreadsheet();
 const RELEASE = SSheet.getId() != "1WbZsXlvklQqtlzMroRSMNnj75bis2DiAmjz3cnYspnk"
 
+function toRelease() {
+  let FROM = "Карта проекта";
+  let TO = "!КПШ";
+  var sheets = SSheet.getSheets();
+
+  var regex = new RegExp("'" + FROM + "'", "g");
+  let tor = "'" + TO + "'";
+
+  for (var i = 0; i < sheets.length; i++) {
+    var sheet = sheets[i];
+    var range = sheet.getDataRange();
+    var formulas = range.getFormulas();
+
+    for (var j = 0; j < formulas.length; j++) {
+      for (var k = 0; k < formulas[j].length; k++) {
+        if (formulas[j][k]) {
+          if (formulas[j][k].indexOf("INDIRECT") === -1) {
+            formulas[j][k] = formulas[j][k].replace(regex, tor);
+            sheet.getRange(j + 1, k + 1).setFormula(formulas[j][k]);
+          }
+        }
+      }
+    }
+  }
+
+  SSheet.deleteSheet(SSheet.getSheetByName(FROM));
+  SSheet.getSheetByName(TO).setName(FROM);
+
+  getBlockSheets().forEach(e => SSheet.deleteSheet(e))
+}
+
 
 function addListAtNow() {
   var currentDate = new Date();
@@ -11,13 +42,6 @@ function addListAtNow() {
   createNewBlock(dateString)
 }
 
-// function resetProgress() {
-//   var sheets = SSheet.getSheets();
-//   for (var i = 3; i < sheets.length; i++) {
-//     SSheet.deleteSheet(sheets[i]);
-//   }
-//   PropertiesService.getScriptProperties().deleteAllProperties()
-// }
 
 function onOpen() {
   SpreadsheetApp.getUi()
@@ -27,8 +51,6 @@ function onOpen() {
     .addItem('Удалить блок(и)', 'showDeleteBlocks')
 
     .addItem('Быстрый лист', 'addListAtNow')
-    // .addItem('Удалить сгенерированные страницы', 'resetProgress')
-
     .addToUi();
 }
 
@@ -66,7 +88,6 @@ function showExtendTimeline() {
     .addMetaTag('viewport', 'width=device-width, initial-scale=1')
   SpreadsheetApp.getUi().showModalDialog(htmlOutput, 'Расширение таймлайна');
 }
-
 
 
 function showDeleteBlocks() {
