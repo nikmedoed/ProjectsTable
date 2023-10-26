@@ -9,7 +9,7 @@ const COLUMN_PROGRESS = 9
 
 const ROW_START = 9
 
-function onBlocksChange(){
+function onBlocksChange() {
   temploraryTasksFormula()
   reloadGraphs()
 }
@@ -116,8 +116,25 @@ function processDateColumns(sheet, row, column, value) {
 }
 
 
+function bloksDataFix() {
+  for (let sheet of getBlockSheets()) {
+    let last = sheet.getLastRow()
+    let len = COLUMN_TASK - COLUMN_LEVEL
+    var values = sheet.getSheetValues(ROW_START, COLUMN_LEVEL, last - ROW_START + 1, len + 1)
+    var i
+    for (i = values.length - 1; i >= 0; i--) {
+      if (values[i][0] !== "" && values[i][0] !== null) {
+        break
+      }
+    }
+    processDateAgregate(sheet, i + ROW_START)
+    values = values.map(row => [fixLevel(row[len], row[0])])
+    sheet.getRange(ROW_START, COLUMN_TASK, sheet.getLastRow() - ROW_START + 1, 1).setValues(values)
+  }
+}
+
+
 function processDateAgregate(sheet, row) {
-  Logger.log(row)
   let mmmax = Math.max(COLUMN_DURATION, COLUMN_START, COLUMN_END);
 
   if (row == ROW_START) return
