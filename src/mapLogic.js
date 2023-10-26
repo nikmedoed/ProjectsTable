@@ -92,7 +92,7 @@ function extractSheetName(formula) {
   }
   let exclamIndex = formula.indexOf('!');
   if (exclamIndex === -1) {
-    return null; 
+    return null;
   }
   let potentialSheetName = formula.slice(0, exclamIndex);
   if (potentialSheetName.startsWith("'") && potentialSheetName.endsWith("'")) {
@@ -100,7 +100,6 @@ function extractSheetName(formula) {
   }
   return potentialSheetName;
 }
-
 
 
 function deleteSheetsAndRows(selectedNames = ['asfasdsdvafadfgadfg']) {
@@ -116,11 +115,10 @@ function deleteSheetsAndRows(selectedNames = ['asfasdsdvafadfgadfg']) {
   for (var i = dataColumn.length - 1; i >= 0; i--) {
     let formula = dataFormulas[i]
     if (formula && namesSet.has(dataColumn[i])) {
-      var sheetName =  extractSheetName(formula)
+      var sheetName = extractSheetName(formula)
       if (sheetName) {
         var sheetToDelete = SSheet.getSheetByName(sheetName);
         if (sheetToDelete) {
-          Logger.log(`deleting ${sheetName}`)
           SSheet.deleteSheet(sheetToDelete);
           sheet.deleteRow(i + 1);
           continue

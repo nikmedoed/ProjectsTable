@@ -44,13 +44,17 @@ function addListAtNow() {
 
 
 function onOpen() {
-  SpreadsheetApp.getUi()
-    .createMenu('Управление проектом')
-    .addItem('Добавить новый блок', 'createNewBlockPrompt')
-    .addItem('Расширить таймлайн', 'showExtendTimeline')
-    .addItem('Удалить блок(и)', 'showDeleteBlocks')
-    .addItem('Пересобрать графики принудительно', 'reloadGraphs')
-
+  let ui = SpreadsheetApp.getUi()
+  ui
+    .createMenu('💎 Управление проектом ')
+    .addItem('➕ Добавить новый блок', 'createNewBlockPrompt')
+    .addItem('📈 Расширить таймлайн', 'showExtendTimeline')
+    .addItem('❌ Удалить блок(и)', 'showDeleteBlocks')
+    .addSubMenu(ui
+      .createMenu('🔧 Починить')
+      .addItem('Пересобрать графики принудительно', 'reloadGraphs')
+      .addItem('Обновить формулу текущих задач', 'temploraryTasksFormula')
+    )
     // .addItem('Быстрый лист', 'addListAtNow')
     .addToUi();
 }

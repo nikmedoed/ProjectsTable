@@ -130,7 +130,7 @@ function insertRight(sheet, startDate, endDate, borders) {
   startDate = startDate || getTimelineStartDate() || new Date()
   endDate = endDate || getTimelineEndDate() || new Date(Date.now() + 120 * day);
 
-  const columnsInsert = Math.floor((endDate - startDate) / (7 * day)) - undelete + 1
+  const columnsInsert = Math.ceil((endDate - startDate) / (7 * day)) - undelete 
   if (columnsInsert <= 0) { return }
   sheet.insertColumnsAfter(initTimelineColumn, columnsInsert)
   drawTimeline(sheet, timelineRow, timelineColumn, startDate, endDate)
