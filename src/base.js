@@ -49,8 +49,9 @@ function onOpen() {
     .addItem('Добавить новый блок', 'createNewBlockPrompt')
     .addItem('Расширить таймлайн', 'showExtendTimeline')
     .addItem('Удалить блок(и)', 'showDeleteBlocks')
+    .addItem('Пересобрать графики принудительно', 'reloadGraphs')
 
-    .addItem('Быстрый лист', 'addListAtNow')
+    // .addItem('Быстрый лист', 'addListAtNow')
     .addToUi();
 }
 

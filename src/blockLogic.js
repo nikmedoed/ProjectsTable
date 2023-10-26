@@ -9,6 +9,10 @@ const COLUMN_PROGRESS = 9
 
 const ROW_START = 9
 
+function onBlocksChange(){
+  temploraryTasksFormula()
+  reloadGraphs()
+}
 
 function temploraryTasksFormula() {
   const sheet = SSheet.getSheetByName(TEMPLORARY);
@@ -26,7 +30,6 @@ function temploraryTasksFormula() {
   const labelClear = `label ${dateDiff} ''`;
 
   const formula = `=ARRAYFORMULA(TRIM(QUERY({${rangeString}}; "SELECT ${selectColumns} WHERE ${whereCondition} ${labelClear}"; 0)))`;
-
   sheet.getRange("B3").setFormula(formula);
 }
 
@@ -40,9 +43,11 @@ function onBlockEdit(e) {
   const numRows = range.getNumRows();
   const lastRow = row + numRows - 1;
 
-  // Logger.log(column, row, values)
-  // Logger.log(row, values)
-  // Logger.log(values)
+  if (!RELEASE) {
+    Logger.log(column, row, values)
+    Logger.log(row, values)
+    Logger.log(values)
+  }
 
   if (row < ROW_START) return;
 
@@ -76,7 +81,7 @@ function onBlockEdit(e) {
       }
 
     })
-  } 
+  }
   processDateAgregate(sheet, lastRow)
 }
 

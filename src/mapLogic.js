@@ -71,7 +71,7 @@ function createNewBlock(name, template = null, projectMap = null) {
   newRange.setValues([newBlockValues])
   setBorder(setRowStyleMain(newRange, [2]))
 
-  temploraryTasksFormula()
+  onBlocksChange()
 }
 
 
@@ -86,35 +86,56 @@ function getBlockNames() {
 }
 
 
-function deleteSheetsAndRows(selectedNames = ['Исходные данные']) {
-  var sheet = SSheet.getSheetByName(TEMPLATE_MAP);
-  var dataColumn = sheet.getSheetValues(1, 2, sheet.getLastRow(), 1)
-  var dataColumnFlattened = dataColumn.flat()
+function extractSheetName(formula) {
+  if (formula.startsWith('=')) {
+    formula = formula.slice(1);
+  }
+  let exclamIndex = formula.indexOf('!');
+  if (exclamIndex === -1) {
+    return null; 
+  }
+  let potentialSheetName = formula.slice(0, exclamIndex);
+  if (potentialSheetName.startsWith("'") && potentialSheetName.endsWith("'")) {
+    return potentialSheetName.slice(1, -1);
+  }
+  return potentialSheetName;
+}
+
+
+
+function deleteSheetsAndRows(selectedNames = ['asfasdsdvafadfgadfg']) {
   var namesSet = new Set(selectedNames);
+
+  var sheet = SSheet.getSheetByName(TEMPLATE_MAP);
+  var dataRange = sheet.getRange(1, 2, sheet.getLastRow(), 1)
+  var dataColumn = dataRange.getValues().flat()
+  var dataFormulas = dataRange.getFormulas().flat()
+
   var failedToDelete = [];
 
-  for (var i = dataColumnFlattened.length - 1; i >= 0; i--) {
-    if (namesSet.has(dataColumnFlattened[i])) {
-      var cell = sheet.getRange(i + 1, 2);
-      var formula = cell.getFormula();
-      var sheetNameMatch = formula.match(/(?<=').+?(?=')/);
-      if (sheetNameMatch) {
-        var sheetName = sheetNameMatch[0];
+  for (var i = dataColumn.length - 1; i >= 0; i--) {
+    let formula = dataFormulas[i]
+    if (formula && namesSet.has(dataColumn[i])) {
+      var sheetName =  extractSheetName(formula)
+      if (sheetName) {
         var sheetToDelete = SSheet.getSheetByName(sheetName);
         if (sheetToDelete) {
+          Logger.log(`deleting ${sheetName}`)
           SSheet.deleteSheet(sheetToDelete);
           sheet.deleteRow(i + 1);
-        } else {
-          failedToDelete.push(dataColumn[i]);
+          continue
         }
       }
+      failedToDelete.push(dataColumn[i])
     }
   }
 
   if (failedToDelete.length > 0) {
+    Logger.log(`failedToDelete ${failedToDelete}`)
     var message = 'Пропущены блоки:\n- ' + failedToDelete.join('\n- ') + "\n\nУдалите лист блока, затем удалите строку блока и проверьте работоспособность элементов таблицы.";
     SSheet.toast(message, 'Не получилось удалить', 10);
   }
+  onBlocksChange()
 }
 
 
