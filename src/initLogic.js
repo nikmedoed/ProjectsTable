@@ -47,6 +47,9 @@ function projectInit() {
   for (let block of dataSet.block) {
     createNewBlock(block, template, projectMap)
   }
+
+  SSheet.getSheetByName(DYNAMIC_GRAPH).showSheet()
+  SSheet.getSheetByName(STATUS_GRAPH).showSheet()
 }
 
 
