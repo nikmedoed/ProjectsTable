@@ -42,6 +42,7 @@ function onBlockEdit(e) {
   const row = range.getRow();
   const numRows = range.getNumRows();
   const lastRow = row + numRows - 1;
+  const DATES_COLUMNS = [COLUMN_DURATION, COLUMN_START, COLUMN_END]
 
   if (!RELEASE) {
     Logger.log(column, row, values)
@@ -65,9 +66,11 @@ function onBlockEdit(e) {
         let task = taskrange.getValue();
         if (task !== "") {
           taskrange.setValue(fixLevel(task, currentValue));
+          if (isReal) {
+            DATES_COLUMNS.forEach(e => clearErrorFormula(sheet, currentRow, e))
+          }
         }
       }
-
       if (currentColumn === COLUMN_TASK) {
         let level = sheet.getRange(currentRow, COLUMN_LEVEL).getValue();
         if (level !== "") {
@@ -76,13 +79,26 @@ function onBlockEdit(e) {
       }
       taskrange.setWrapStrategy(SpreadsheetApp.WrapStrategy.WRAP);
 
-      if (isReal && [COLUMN_DURATION, COLUMN_START, COLUMN_END].includes(currentColumn)) {
+      if (isReal && DATES_COLUMNS.includes(currentColumn)) {
         processDateColumns(sheet, currentRow, currentColumn, currentValue);
       }
 
     })
   }
   processDateAgregate(sheet, lastRow)
+}
+
+function clearErrorFormula(sheet, row, column) {
+  var cell = sheet.getRange(row, column);
+  var formula = cell.getFormula();
+  if (formula) {
+    var value = cell.getValue();
+    if (typeof value === 'string' && value.startsWith('#')) {
+      cell.clearContent();
+    }
+    console.log(value)
+    console.log(formula)
+  }
 }
 
 
@@ -118,18 +134,17 @@ function processDateColumns(sheet, row, column, value) {
 
 function bloksDataFix() {
   for (let sheet of getBlockSheets()) {
-    let last = sheet.getLastRow()
+    let last = sheet.getLastRow() - ROW_START + 1
+    if (last <= 0) { continue }
     let len = COLUMN_TASK - COLUMN_LEVEL
-    var values = sheet.getSheetValues(ROW_START, COLUMN_LEVEL, last - ROW_START + 1, len + 1)
+    var values = sheet.getSheetValues(ROW_START, COLUMN_LEVEL, last, len + 1)
     var i
     for (i = values.length - 1; i >= 0; i--) {
-      if (values[i][0] !== "" && values[i][0] !== null) {
-        break
-      }
+      if (values[i][0] !== "" && values[i][0] !== null) { break }
     }
     processDateAgregate(sheet, i + ROW_START)
     values = values.map(row => [fixLevel(row[len], row[0])])
-    sheet.getRange(ROW_START, COLUMN_TASK, sheet.getLastRow() - ROW_START + 1, 1).setValues(values)
+    sheet.getRange(ROW_START, COLUMN_TASK, last, 1).setValues(values)
   }
 }
 
@@ -143,13 +158,14 @@ function processDateAgregate(sheet, row) {
   let formulas = valuesRange.getFormulas();
 
   let [shifted_duration, shifted_start, shifted_end] = [COLUMN_DURATION, COLUMN_START, COLUMN_END].map(e => e - COLUMN_REAL_TASK)
+
   for (var i = values.length - 1; i >= 0; i--) {
     if (!values[i][0] && (!formulas[i][shifted_duration] || !formulas[i][shifted_start] || !formulas[i][shifted_end])) {
       var currentRow = ROW_START + i;
       let fmls = [
         '=INDIRECT("R[0]C[2]"; FALSE) - INDIRECT("R[0]C[1]"; FALSE)',
-        `=QUERY(INDIRECT("R[1]C2:R["& + (MATCH(TRUE; ARRAYFORMULA(INDIRECT("B"&ROW(B${currentRow})+1&":B") <= B${currentRow}); 0) - 1 )&"]C[0]"; FALSE); "SELECT MIN(G) WHERE C=True label MIN(G) '' "; 0)`,
-        `=QUERY(INDIRECT("R[1]C2:R["& + (MATCH(TRUE; ARRAYFORMULA(INDIRECT("B"&ROW(B${currentRow})+1&":B") <= B${currentRow}); 0) - 1 )&"]C[0]"; FALSE); "SELECT MAX(H) WHERE C=True label MAX(H) '' "; 0)`
+        `=QUERY(INDIRECT("R[1]C2:R[" & IFERROR(MATCH(TRUE; ARRAYFORMULA(INDIRECT("B"&ROW(B${currentRow})+1&":B") <= B${currentRow}); 0) - 1; ROWS(B:B) - ROW(B${currentRow}))&"]C[0]"; FALSE); "SELECT MIN(G) WHERE C=True label MIN(G) '' "; 0)`,
+        `=QUERY(INDIRECT("R[1]C2:R[" & IFERROR(MATCH(TRUE; ARRAYFORMULA(INDIRECT("B"&ROW(B${currentRow})+1&":B") <= B${currentRow}); 0) - 1 ;ROWS(B:B) - ROW(B${currentRow}))&"]C[0]"; FALSE); "SELECT MAX(H) WHERE C=True label MAX(H) '' "; 0)`
       ]
       sheet.getRange(currentRow, COLUMN_DURATION, 1, 3).setFormulas([fmls]);
     }

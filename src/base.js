@@ -33,6 +33,9 @@ function toRelease() {
   SSheet.getSheetByName(TO).setName(FROM);
 
   getBlockSheets().forEach(e => SSheet.deleteSheet(e))
+
+  SSheet.getSheetByName(DYNAMIC_GRAPH).hideSheet()
+  SSheet.getSheetByName(STATUS_GRAPH).hideSheet()
 }
 
 
