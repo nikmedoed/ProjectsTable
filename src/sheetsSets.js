@@ -8,6 +8,11 @@ const STATUS_GRAPH = "Статус"
 const COMMANDO = "Команда"
 const TEMPLORARY = "Текущие задачи"
 
+
+function getHided(){
+  return [DYNAMIC_GRAPH, STATUS_GRAPH, TEMPLORARY]
+}
+
 function getBlockSheets() {
   let sheets = SSheet.getSheets();
   const excludedSheetNames = new Set([

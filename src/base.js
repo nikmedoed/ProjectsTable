@@ -34,8 +34,7 @@ function toRelease() {
 
   getBlockSheets().forEach(e => SSheet.deleteSheet(e))
 
-  SSheet.getSheetByName(DYNAMIC_GRAPH).hideSheet()
-  SSheet.getSheetByName(STATUS_GRAPH).hideSheet()
+  getHided().forEach(e => SSheet.getSheetByName(e).hideSheet())
 }
 
 
@@ -55,7 +54,7 @@ function onOpen() {
     .addItem('❌ Удалить блок(и)', 'showDeleteBlocks')
     .addSubMenu(ui
       .createMenu('🔧 Починить')
-      .addItem('Пересобрать графики принудительно', 'reloadGraphs')
+      .addItem('Пересобрать графики принудительно', 'reloadGraphsForce')
       .addItem('Обновить формулу текущих задач', 'temploraryTasksFormula')
       .addItem('Поправить описание задач и формулы', 'bloksDataFix')
     )

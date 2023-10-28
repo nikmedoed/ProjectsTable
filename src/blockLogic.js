@@ -11,7 +11,7 @@ const ROW_START = 9
 
 function onBlocksChange() {
   temploraryTasksFormula()
-  reloadGraphs()
+  reloadGraphsForce()
 }
 
 function temploraryTasksFormula() {
@@ -82,7 +82,6 @@ function onBlockEdit(e) {
       if (isReal && DATES_COLUMNS.includes(currentColumn)) {
         processDateColumns(sheet, currentRow, currentColumn, currentValue);
       }
-
     })
   }
   processDateAgregate(sheet, lastRow)
@@ -162,10 +161,12 @@ function processDateAgregate(sheet, row) {
   for (var i = values.length - 1; i >= 0; i--) {
     if (!values[i][0] && (!formulas[i][shifted_duration] || !formulas[i][shifted_start] || !formulas[i][shifted_end])) {
       var currentRow = ROW_START + i;
+
+      let dateFormula = e=> `=IFERROR(QUERY(INDIRECT("R[1]C2:R[" & IFERROR(MATCH(TRUE; ARRAYFORMULA(INDIRECT("B"&ROW(B${currentRow})+1&":B") <= B${currentRow}); 0) - 1; ROWS(B:B) - ROW(B${currentRow}))&"]C[0]"; FALSE); "SELECT ${e}(G) WHERE C=True label ${e}(G) '' "; 0))`
       let fmls = [
         '=INDIRECT("R[0]C[2]"; FALSE) - INDIRECT("R[0]C[1]"; FALSE)',
-        `=QUERY(INDIRECT("R[1]C2:R[" & IFERROR(MATCH(TRUE; ARRAYFORMULA(INDIRECT("B"&ROW(B${currentRow})+1&":B") <= B${currentRow}); 0) - 1; ROWS(B:B) - ROW(B${currentRow}))&"]C[0]"; FALSE); "SELECT MIN(G) WHERE C=True label MIN(G) '' "; 0)`,
-        `=QUERY(INDIRECT("R[1]C2:R[" & IFERROR(MATCH(TRUE; ARRAYFORMULA(INDIRECT("B"&ROW(B${currentRow})+1&":B") <= B${currentRow}); 0) - 1 ;ROWS(B:B) - ROW(B${currentRow}))&"]C[0]"; FALSE); "SELECT MAX(H) WHERE C=True label MAX(H) '' "; 0)`
+        dateFormula("MIN"),
+        dateFormula("MAX")
       ]
       sheet.getRange(currentRow, COLUMN_DURATION, 1, 3).setFormulas([fmls]);
     }

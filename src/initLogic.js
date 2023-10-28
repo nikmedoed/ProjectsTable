@@ -48,8 +48,7 @@ function projectInit() {
     createNewBlock(block, template, projectMap)
   }
 
-  SSheet.getSheetByName(DYNAMIC_GRAPH).showSheet()
-  SSheet.getSheetByName(STATUS_GRAPH).showSheet()
+  getHided().forEach(e => SSheet.getSheetByName(e).showSheet())
 }
 
 

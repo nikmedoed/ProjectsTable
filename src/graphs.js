@@ -15,7 +15,10 @@ function createDynamic(force = false) {
     for (var c = 1; c < charts.length; c++) {
       sheet.removeChart(charts[c]);
     }
-    chartBuilder.removeRange(charts[0].getRanges()[0]);
+    try {
+      chartBuilder.removeRange(charts[0].getRanges()[0]);
+    }
+    catch { }
     chartBuilder.addRange(dataRange);
   } else {
     chartBuilder = sheet.newChart();
@@ -56,6 +59,11 @@ function createDynamic(force = false) {
   } else {
     sheet.insertChart(chartBuilder.build());
   }
+}
+
+
+function reloadGraphsForce() {
+  reloadGraphs(true)
 }
 
 function reloadGraphs(force) {
