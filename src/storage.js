@@ -3,9 +3,20 @@ function isValidDate(d) {
   return date instanceof Date && !isNaN(date);
 }
 
+const TIMELINE_END_DATE = "TIMELINE_END_DATE"
+const TIMELINE_START_DATE = "TIMELINE_START_DATE"
+const REPORT_STATE = "REPORT_STATE"
 
-TIMELINE_END_DATE = "TIMELINE_END_DATE"
-TIMELINE_START_DATE = "TIMELINE_START_DATE"
+const STORAGE = PropertiesService.getDocumentProperties
+
+function storeReportState(state = false) {
+  STORAGE().setProperty("REPORT_STATE", state.toString());
+}
+
+function getReportState() {
+  return STORAGE().getProperty("REPORT_STATE") === 'true';
+}
+
 
 function storeTimelineEndDate(date) {
   storeDate(TIMELINE_END_DATE, date)
@@ -27,7 +38,7 @@ function getTimelineStartDate() {
 
 function storeDate(key, date) {
   if (isValidDate(date)) {
-    PropertiesService.getScriptProperties().setProperty(key, date);
+    STORAGE().setProperty(key, date);
   } else {
     throw new Error('Некорректная дата');
   }
@@ -35,6 +46,6 @@ function storeDate(key, date) {
 }
 
 function getDate(key) {
-  var storedDate = PropertiesService.getScriptProperties().getProperty(key);
+  var storedDate = STORAGE().getProperty(key);
   return storedDate ? new Date(storedDate) : "";
 }

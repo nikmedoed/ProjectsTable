@@ -58,6 +58,7 @@ function onOpen() {
       .addItem('Обновить формулу текущих задач', 'temploraryTasksFormula')
       .addItem('Поправить описание задач и формулы', 'bloksDataFix')
     )
+    .addItem('🔀 Переключить режим отчёта', 'shitchReport')
     // .addItem('Быстрый лист', 'addListAtNow')
     .addToUi();
 }
