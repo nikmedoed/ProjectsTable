@@ -162,11 +162,11 @@ function processDateAgregate(sheet, row) {
     if (!values[i][0] && (!formulas[i][shifted_duration] || !formulas[i][shifted_start] || !formulas[i][shifted_end])) {
       var currentRow = ROW_START + i;
 
-      let dateFormula = e=> `=IFERROR(QUERY(INDIRECT("R[1]C2:R[" & IFERROR(MATCH(TRUE; ARRAYFORMULA(INDIRECT("B"&ROW(B${currentRow})+1&":B") <= B${currentRow}); 0) - 1; ROWS(B:B) - ROW(B${currentRow}))&"]C[0]"; FALSE); "SELECT ${e}(G) WHERE C=True label ${e}(G) '' "; 0))`
+      let dateFormula = e=> `=IFERROR(QUERY(INDIRECT("R[1]C2:R[" & IFERROR(MATCH(TRUE; ARRAYFORMULA(INDIRECT("B"&ROW(B${currentRow})+1&":B") <= B${currentRow}); 0) - 1; ROWS(B:B) - ROW(B${currentRow}))&"]C[0]"; FALSE); "SELECT ${e} WHERE C=True label ${e} '' "; 0))`
       let fmls = [
         '=INDIRECT("R[0]C[2]"; FALSE) - INDIRECT("R[0]C[1]"; FALSE)',
-        dateFormula("MIN"),
-        dateFormula("MAX")
+        dateFormula("MIN(G)"),
+        dateFormula("MAX(H)")
       ]
       sheet.getRange(currentRow, COLUMN_DURATION, 1, 3).setFormulas([fmls]);
     }
