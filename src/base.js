@@ -1,4 +1,3 @@
-
 const DEFAULT_VALUE = "";
 
 const SSheet = SpreadsheetApp.getActiveSpreadsheet();
@@ -49,6 +48,8 @@ function onOpen() {
   let ui = SpreadsheetApp.getUi()
   ui
     .createMenu('💎 Управление проектом ')
+    .addItem('📄 Сгенерировать отчёт', 'generateReport')
+    .addItem('🔀 Переключить режим отчёта', 'shitchReport')
     .addItem('➕ Добавить новый блок', 'createNewBlockPrompt')
     .addItem('📈 Расширить таймлайн', 'showExtendTimeline')
     .addItem('❌ Удалить блок(и)', 'showDeleteBlocks')
@@ -58,8 +59,6 @@ function onOpen() {
       .addItem('Обновить формулу текущих задач', 'temploraryTasksFormula')
       .addItem('Поправить описание задач и формулы', 'bloksDataFix')
     )
-    .addItem('🔀 Переключить режим отчёта', 'shitchReport')
-    // .addItem('Быстрый лист', 'addListAtNow')
     .addToUi();
 }
 

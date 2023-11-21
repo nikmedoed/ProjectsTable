@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <script>
+    var presentationId = '<?= presentationId ?>'
+    var shapeId = '<?= shapeId ?>'
+    var imageBlobBase64 = "<?= imageBlobBase64 ?>"
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+</head>
+
+<body style="background-color:#F8F9FA;">
+  <canvas id="canvas"></canvas>
+</body>
+
+<script>
+  var pdfjsLib = window['pdfjs-dist/build/pdf'];
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+  function convertPDFtoImageAndReturnData(blobString) {
+    var binaryData = atob(blobString);
+    var arrayBuffer = new ArrayBuffer(binaryData.length);
+    var view = new Uint8Array(arrayBuffer);
+    for (var i = 0; i < binaryData.length; i++) {
+      view[i] = binaryData.charCodeAt(i);
+    }
+    var blob = new Blob([arrayBuffer], { type: 'application/pdf' });
+
+    var fileReader = new FileReader();
+    fileReader.onload = function () {
+      var arrayBuffer = this.result;
+      pdfjsLib.getDocument({ data: arrayBuffer }).promise.then(function (pdfDoc) {
+        pdfDoc.getPage(1).then(function (page) {
+          var viewport = page.getViewport({ scale: 4 });
+          var canvas = document.createElement('canvas');
+          var ctx = canvas.getContext('2d');
+          canvas.height = viewport.height;
+          canvas.width = viewport.width;
+
+          var renderContext = {
+            canvasContext: ctx,
+            viewport: viewport
+          };
+          var renderTask = page.render(renderContext);
+          renderTask.promise.then(function () {
+            var imageURI = canvas.toDataURL();
+            google.script.run
+              .withSuccessHandler(function () { google.script.host.close(); })
+              .imageToShape(imageURI, presentationId, shapeId);
+          });
+        });
+      });
+    };
+    fileReader.readAsArrayBuffer(blob);
+  }
+
+  convertPDFtoImageAndReturnData(imageBlobBase64);
+</script>
+
+</html>
