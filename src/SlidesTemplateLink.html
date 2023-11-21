@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        p {
+            text-align: justify;
+            text-indent: 20px;
+            margin-bottom: 15px;
+            margin-top: 0;
+            line-height: 1.5;
+        }
+
+        a {
+            color: #4285f4;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        .input-row {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 10px;
+        }
+
+        .input-field {
+            flex: 1;
+            border: 2px solid #4285f4;
+            border-radius: 4px;
+            padding: 8px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s;
+            margin-bottom: 10px;
+        }
+
+        input[type="text"]:focus {
+            border-color: #0f9d58;
+        }
+
+        .button-row {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        button {
+            background-color: #4285f4;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+            margin-left: 10px;
+        }
+
+        button:hover {
+            background-color: #0f9d58;
+        }
+
+        .code {
+            font-family: monospace;
+            background-color: #f7f7f7;
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-size: 90%;
+        }
+    </style>
+</head>
+
+<body>
+    <p>Шаблон будет использоваться для генерации отчётов, в нём требуется заполнить информацию и проекте, которая не
+        указывается в таблице. Не удаляйте поля вида <span class="code">{{name}}</span>, они заполнятся автоматически
+        при генерации. Вы можете
+        вставить дополнительные страницы, добавить элементы на слайды, изменить тему, стили, положение полей. При
+        генерации будет использоваться шаблон по ссылке:</p>
+    <p><a href="<?= url ?>" target="_blank">Текущая ссылка на шаблон отчёта</a></p>
+
+    <div class="input-row">
+        <input type="text" id="newUrl" class="input-field" placeholder="Вставьте новую ссылку здесь">
+    </div>
+
+    <div class="button-row">
+        <button onclick="storeNewLink()">Сохранить</button>
+        <button onclick="google.script.host.close()">Закрыть</button>
+    </div>
+
+    <script>
+        function storeNewLink() {
+            var newUrl = document.getElementById('newUrl').value;
+            google.script.run
+                .withSuccessHandler(function () {
+                    google.script.host.close();
+                })
+                .withFailureHandler(function (msg) {
+                    alert(msg);
+                })
+                .storePresentationIdOrLink(newUrl);
+        }
+    </script>
+</body>
+
+</html>

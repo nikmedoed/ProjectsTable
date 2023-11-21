@@ -1,5 +1,5 @@
 function generateReport() {
-  const presentationId = getSlidesTemplateId()
+  const presentationId = getPresentationId()
   const presentation = SlidesApp.openById(presentationId);
   const slide = presentation.getSlides()[0].duplicate();
 

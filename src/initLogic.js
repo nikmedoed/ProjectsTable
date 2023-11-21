@@ -49,6 +49,7 @@ function projectInit() {
   }
 
   getHided().forEach(e => SSheet.getSheetByName(e).showSheet())
+  makeTemplateSlidesCopy(dataSet.name)
 }
 
 

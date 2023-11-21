@@ -1,5 +1,5 @@
 function testSlideDrawing() {
-  const presentationId = getSlidesTemplateId()
+  const presentationId = getPresentationId()
   const presentation = SlidesApp.openById(presentationId);
   const slide = presentation.getSlides()[0].duplicate();
 
@@ -118,7 +118,7 @@ function rangeToShape(range, shape) {
   })
 
   var totalWidth = widths.reduce((accumulator, currentValue) => accumulator + currentValue, 0);
-  const ratio = 1.2*shape.getWidth() / totalWidth;
+  const ratio = 1.2 * shape.getWidth() / totalWidth;
 
   var cells = []
   values.forEach((row, rowIndex) => {

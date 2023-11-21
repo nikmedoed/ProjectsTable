@@ -1,15 +1,4 @@
-const INIT_PAGE = "Инициация";
-const TEMPLATE_MAP = "Карта проекта"
-const TEMPLATE_BLOCK = "Шаблон блока";
-
-const DYNAMIC_GRAPH = "Динамика"
-const STATUS_GRAPH = "Статус"
-
-const COMMANDO = "Команда"
-const TEMPLORARY = "Текущие задачи"
-
-
-function getHided(){
+function getHided() {
   return [DYNAMIC_GRAPH, STATUS_GRAPH, TEMPLORARY]
 }
 

@@ -1,8 +1,3 @@
-const DEFAULT_VALUE = "";
-
-const SSheet = SpreadsheetApp.getActiveSpreadsheet();
-const RELEASE = SSheet.getId() != "1WbZsXlvklQqtlzMroRSMNnj75bis2DiAmjz3cnYspnk"
-
 function toRelease() {
   let FROM = "Карта проекта";
   let TO = "!КПШ";
@@ -59,6 +54,7 @@ function onOpen() {
       .addItem('Обновить формулу текущих задач', 'temploraryTasksFormula')
       .addItem('Поправить описание задач и формулы', 'bloksDataFix')
     )
+    .addItem('🔗 Ссылка на шаблон отчёта', 'slidesTemplateLink')
     .addToUi();
 }
 

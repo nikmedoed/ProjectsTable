@@ -36,7 +36,7 @@ function rotateAndAlign(range) {
   return range
 }
 
-function setBackHeader(range){
+function setBackHeader(range) {
   range.setBackground(HEADER_BACK);
   return range
 }

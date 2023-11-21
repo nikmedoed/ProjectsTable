@@ -1,6 +1,3 @@
-const TAG_TIMELINE = "{{timeline}}"
-
-
 function drawDefaultTimeline(sheet = SSheet.getSheetByName("Карта проекта (копия)")) {
   generateTimeline(sheet)
 }
@@ -130,7 +127,7 @@ function insertRight(sheet, startDate, endDate, borders) {
   startDate = startDate || getTimelineStartDate() || new Date()
   endDate = endDate || getTimelineEndDate() || new Date(Date.now() + 120 * day);
 
-  const columnsInsert = Math.ceil((endDate - startDate) / (7 * day)) - undelete 
+  const columnsInsert = Math.ceil((endDate - startDate) / (7 * day)) - undelete
   if (columnsInsert <= 0) { return }
   sheet.insertColumnsAfter(initTimelineColumn, columnsInsert)
   drawTimeline(sheet, timelineRow, timelineColumn, startDate, endDate)

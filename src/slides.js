@@ -1,6 +1,3 @@
-const SLIDES_BASE_TEMPLATE = "1Q7UJHX0h_dZZQRc9Kmo_eMDW_GFTx8_MeQVNCO1JDCs"
-
-
 function getSlidesTemplateId() {
   // ID будет хранится в сторадже, будет инстефс для пересохранения. 
   // Т.е. нужно сделать копию шаблона, выдать ссылку, а потом использовать компию или предложить указать новую.
@@ -8,24 +5,45 @@ function getSlidesTemplateId() {
   return SLIDES_BASE_TEMPLATE
 }
 
-function getTemplateCopy(name) {
-  var templateFile = DriveApp.getFileById(SLIDES_BASE_TEMPLATE);
 
-  if (!name) {
-    var today = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "dd.MM.yyyy");
-    name = templateFile.getName() + " – " + today;
-  }
+function slidesTemplateLink() {
+  let url = getPresentationTemplateLink()
+  var htmlTemplate = HtmlService.createTemplateFromFile('SlidesTemplateLink');
+  htmlTemplate.url = url;
+  var userInterface = htmlTemplate.evaluate()
+    .setWidth(580)
+    .setHeight(350);
+  SpreadsheetApp.getUi().showModalDialog(userInterface, "Ссылка на шаблон отчёта");
+}
+
+
+function getSlidesCopy(slidesId, name) {
+  var templateFile = DriveApp.getFileById(slidesId);
   var folder = DriveApp.getFileById(SSheet.getId()).getParents().next();
-  var copiedFile = templateFile.makeCopy(name, folder);
+  return templateFile.makeCopy(name, folder);
+}
+
+
+function makeTemplateSlidesCopy(name) {
+  name = `Шаблон отчёта по проекту "${name}"`
+  var copiedFile = getSlidesCopy(SLIDES_BASE_TEMPLATE, name)
+  storePresentationIdOrLink(copiedFile.getId())
+  slidesTemplateLink();
+}
+
+
+function getTemplateCopyFprReport(name) {
+  var today = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd");
+  name = `Отчёт - ${today} - ${name}`
+  var copiedFile = getSlidesCopy(getPresentationId(), name)
 
   var fileUrl = copiedFile.getUrl();
-  console.log(fileUrl);
-
-  return copiedFile.getId();
+  var fileId = copiedFile.getId();
+  return
 }
 
 function mapToSlide() {
-  const presentationId = getSlidesTemplateId()
+  const presentationId = getPresentationId()
   const presentation = SlidesApp.openById(presentationId);
   const slide = presentation.getSlides()[0].duplicate();
 

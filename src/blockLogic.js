@@ -1,14 +1,3 @@
-const COLUMN_LEVEL = 2
-const COLUMN_REAL_TASK = 3
-const COLUMN_CODE = 4
-const COLUMN_TASK = 5
-const COLUMN_DURATION = 6
-const COLUMN_START = 7
-const COLUMN_END = 8
-const COLUMN_PROGRESS = 9
-
-const ROW_START = 9
-
 function onBlocksChange() {
   temploraryTasksFormula()
   reloadGraphsForce()
@@ -162,7 +151,7 @@ function processDateAgregate(sheet, row) {
     if (!values[i][0] && (!formulas[i][shifted_duration] || !formulas[i][shifted_start] || !formulas[i][shifted_end])) {
       var currentRow = ROW_START + i;
 
-      let dateFormula = e=> `=IFERROR(QUERY(INDIRECT("R[1]C2:R[" & IFERROR(MATCH(TRUE; ARRAYFORMULA(INDIRECT("B"&ROW(B${currentRow})+1&":B") <= B${currentRow}); 0) - 1; ROWS(B:B) - ROW(B${currentRow}))&"]C[0]"; FALSE); "SELECT ${e} WHERE C=True label ${e} '' "; 0))`
+      let dateFormula = e => `=IFERROR(QUERY(INDIRECT("R[1]C2:R[" & IFERROR(MATCH(TRUE; ARRAYFORMULA(INDIRECT("B"&ROW(B${currentRow})+1&":B") <= B${currentRow}); 0) - 1; ROWS(B:B) - ROW(B${currentRow}))&"]C[0]"; FALSE); "SELECT ${e} WHERE C=True label ${e} '' "; 0))`
       let fmls = [
         '=INDIRECT("R[0]C[2]"; FALSE) - INDIRECT("R[0]C[1]"; FALSE)',
         dateFormula("MIN(G)"),
