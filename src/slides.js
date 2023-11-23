@@ -1,12 +1,19 @@
 function generateReport() {
-  const steps = [
+  const template = HtmlService.createTemplateFromFile('Report');
+  template.steps = JSON.stringify([
     { name: 'Подготовка шаблона', func: 'prepareTemplate' },
     // {name: 'Подготовка шаблона', func: 'prepareTamplate'},
     //   {name: 'Подготовка шаблона', func: 'prepareTamplate'},
     { name: 'Генерация оглавления', func: 'contentTableGenerator' },
-  ]
-  // const template = HtmlService.createTemplateFromFile('Page');
-  // SpreadsheetApp.getUi().showModalDialog(template.evaluate(), 'Генерация отчёта');
+  ])
+
+  SpreadsheetApp.getUi().showModalDialog(
+    template
+      .evaluate()
+      .setSandboxMode(HtmlService.SandboxMode.NATIVE)
+      .setHeight(200),
+    'Генерация отчёта'
+  );
 }
 
 

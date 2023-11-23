@@ -2,60 +2,230 @@
 <html>
 
 <head>
-  <script>
-    var presentationId = '<?= presentationId ?>'
-    var shapeId = '<?= shapeId ?>'
-    var imageBlobBase64 = "<?= imageBlobBase64 ?>"
-  </script>
+  <title>Генерация отчёта</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      box-sizing: border-box;
+      text-align: center;
+    }
+
+    #progress {
+      width: 100%;
+      max-width: 600px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #progressContainer {
+      width: 100%;
+      background-color: #f4f4f4;
+      overflow: hidden;
+    }
+
+    #progressBar {
+      width: 0%;
+      height: 20px;
+      background-color: #00B050;
+      transition: width 0.4s ease;
+    }
+
+    #message {
+      margin-top: 10px;
+      font-size: 16px;
+    }
+
+    .spinner {
+      position: relative;
+      width: 100px;
+      height: 100px;
+      margin: 10px auto;
+    }
+
+    .spinner:before,
+    .spinner:after {
+      content: "";
+      display: block;
+      position: absolute;
+      border-width: 4px;
+      border-style: solid;
+      border-radius: 50%;
+    }
+
+    @-webkit-keyframes scale-2 {
+      0% {
+        transform: scale(0);
+        opacity: 0;
+      }
+
+      50% {
+        transform: scale(0.7);
+        opacity: 1;
+      }
+
+      100% {
+        transform: scale(1);
+        opacity: 0;
+      }
+    }
+
+    @keyframes scale-2 {
+      0% {
+        transform: scale(0);
+        opacity: 0;
+      }
+
+      50% {
+        transform: scale(0.7);
+        opacity: 1;
+      }
+
+      100% {
+        transform: scale(1);
+        opacity: 0;
+      }
+    }
+
+    @keyframes colors {
+      0% {
+        border-color: #0563C1;
+      }
+
+      33% {
+        border-color: #00B050;
+      }
+
+      66% {
+        border-color: #FFa74F;
+      }
+
+      100% {
+        border-color: #818181;
+      }
+    }
+
+    .spinner.spinner-3:before {
+      width: 98px;
+      height: 98px;
+      top: 0px;
+      left: 0px;
+      -webkit-animation: scale-2 1s linear 0s infinite;
+      animation: scale-2 1s linear 0s infinite, colors infinite 2s linear;
+      ;
+    }
+
+    .spinner.spinner-3:after {
+      width: 98px;
+      height: 98px;
+      top: 0;
+      left: 0;
+      opacity: 0;
+      -webkit-animation: scale-2 1s linear 0.5s infinite;
+      animation: scale-2 1s linear 0.5s infinite, colors infinite 2s linear;
+    }
+  </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 </head>
 
-<body style="background-color:#F8F9FA;">
-  <canvas id="canvas"></canvas>
-</body>
+<body>
+  <div id="progress">
+    <div class="spinner spinner-3"></div>
+    <div id="progressContainer">
+      <div id="progressBar"></div>
+    </div>
+  </div>
+  <div id="message">рлпадшщпрдшпраыфв аф вао фыдвлпр фдлопрЫЛП РУШПР ЙУШЗГАРКЦУЗГП РЦшзг рйупзрук ш</div>
 
-<script>
-  var pdfjsLib = window['pdfjs-dist/build/pdf'];
-  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  <script>
+    var pdfjsLib = window['pdfjs-dist/build/pdf'];
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
-  function convertPDFtoImageAndReturnData(blobString) {
-    var binaryData = atob(blobString);
-    var arrayBuffer = new ArrayBuffer(binaryData.length);
-    var view = new Uint8Array(arrayBuffer);
-    for (var i = 0; i < binaryData.length; i++) {
-      view[i] = binaryData.charCodeAt(i);
+    var steps = JSON.parse("<?= steps ?>");
+    let currentIndex = 0;
+    let data = {};
+
+    function updateProgress(step) {
+      const progress = ((currentIndex + 1) / steps.length) * 100;
+      document.getElementById('progressBar').style.width = progress + '%';
+      document.getElementById('message').innerHTML = `Шаг ${currentIndex + 1} из ${steps.length}: ${step.name}`;
     }
-    var blob = new Blob([arrayBuffer], { type: 'application/pdf' });
 
-    var fileReader = new FileReader();
-    fileReader.onload = function () {
-      var arrayBuffer = this.result;
-      pdfjsLib.getDocument({ data: arrayBuffer }).promise.then(function (pdfDoc) {
-        pdfDoc.getPage(1).then(function (page) {
-          var viewport = page.getViewport({ scale: 4 });
-          var canvas = document.createElement('canvas');
-          var ctx = canvas.getContext('2d');
-          canvas.height = viewport.height;
-          canvas.width = viewport.width;
+    function completeProcess() {
+      document.getElementById('message').innerHTML = 'Процесс завершен. <a href="' + data.reportUrl + '" target="_blank">Ссылка на отчёт</a>';
+      document.getElementById('progress').style.display = 'none';
+    }
 
-          var renderContext = {
-            canvasContext: ctx,
-            viewport: viewport
-          };
-          var renderTask = page.render(renderContext);
-          renderTask.promise.then(function () {
-            var imageURI = canvas.toDataURL();
-            google.script.run
-              .withSuccessHandler(function () { google.script.host.close(); })
-              .imageToShape(imageURI, presentationId, shapeId);
+    function handleError(error) {
+      document.getElementById('message').innerHTML = 'Ошибка: ' + error;
+      document.getElementById('progress').style.display = 'none';
+    }
+
+    function executeStep() {
+      if (currentIndex < steps.length) {
+        const step = steps[currentIndex];
+        updateProgress(step);
+        google.script.run.withSuccessHandler(function (result) {
+          data = { ...data, ...result };
+          updateProgress(step);
+          currentIndex++;
+          executeStep();
+        }).withFailureHandler(handleError)[step.func](data);
+      } else {
+        completeProcess();
+      }
+    }
+
+    window.onload = function () {
+      executeStep();
+    };
+
+    function convertPDFtoImageAndReturnData(blobString) {
+      var binaryData = atob(blobString);
+      var arrayBuffer = new ArrayBuffer(binaryData.length);
+      var view = new Uint8Array(arrayBuffer);
+      for (var i = 0; i < binaryData.length; i++) {
+        view[i] = binaryData.charCodeAt(i);
+      }
+      var blob = new Blob([arrayBuffer], { type: 'application/pdf' });
+
+      var fileReader = new FileReader();
+      fileReader.onload = function () {
+        var arrayBuffer = this.result;
+        pdfjsLib.getDocument({ data: arrayBuffer }).promise.then(function (pdfDoc) {
+          pdfDoc.getPage(1).then(function (page) {
+            var viewport = page.getViewport({ scale: 4 });
+            var canvas = document.createElement('canvas');
+            var ctx = canvas.getContext('2d');
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
+
+            var renderContext = {
+              canvasContext: ctx,
+              viewport: viewport
+            };
+            var renderTask = page.render(renderContext);
+            renderTask.promise.then(function () {
+              var imageURI = canvas.toDataURL();
+              google.script.run
+                .withSuccessHandler(function () { google.script.host.close(); })
+                .imageToShape(imageURI, presentationId, shapeId);
+            });
           });
         });
-      });
-    };
-    fileReader.readAsArrayBuffer(blob);
-  }
+      };
+      fileReader.readAsArrayBuffer(blob);
+    }
 
-  convertPDFtoImageAndReturnData(imageBlobBase64);
-</script>
+  </script>
+</body>
 
 </html>
