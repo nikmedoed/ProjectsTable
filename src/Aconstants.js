@@ -33,3 +33,9 @@ const TEMPLORARY = "Текущие задачи"
 // timeline tag
 const TAG_TIMELINE = "{{timeline}}"
 
+// slides tags
+
+const SLIDES_SHEET_ZONE_TAG = "{{sheetZone}}"
+const SLIDES_CONTENT_TABLE_TAG = "{{contentTable}}"
+const SLIDES_CONTENT_FILED_TAG = "{{contentField}}"
+const SLIDES_CONTENT_NAME_TAG = "Короткий заголовок:"

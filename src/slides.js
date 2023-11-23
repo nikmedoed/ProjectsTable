@@ -1,8 +1,108 @@
-function getSlidesTemplateId() {
-  // ID будет хранится в сторадже, будет инстефс для пересохранения. 
-  // Т.е. нужно сделать копию шаблона, выдать ссылку, а потом использовать компию или предложить указать новую.
+function generateReport() {
+  const steps = [
+    { name: 'Подготовка шаблона', func: 'prepareTemplate' },
+    // {name: 'Подготовка шаблона', func: 'prepareTamplate'},
+    //   {name: 'Подготовка шаблона', func: 'prepareTamplate'},
+    { name: 'Генерация оглавления', func: 'contentTableGenerator' },
+  ]
+  // const template = HtmlService.createTemplateFromFile('Page');
+  // SpreadsheetApp.getUi().showModalDialog(template.evaluate(), 'Генерация отчёта');
+}
 
-  return SLIDES_BASE_TEMPLATE
+
+function mapToSlide() {
+
+  var sheet = SSheet.getSheetByName(TEMPLATE_MAP);
+  var rangeA1Notation = "A6:Q11";
+  var range = sheet.getRange(rangeA1Notation);
+
+  rangeToShape(range, shape)
+}
+
+function prepareTemplate() {
+  let data = collectTemplateValues()
+
+  // Сделали копию шаблона отчёта
+  var today = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd");
+  name = `Отчёт - ${today} - ${data.sheetName}`
+  var copiedFile = getSlidesCopy(getPresentationId(), name)
+  data.reportUrl = copiedFile.getUrl()
+  data.presentationId = copiedFile.getId()
+  data.slidesName = name
+
+  // Находим слайд шаблон для вставки данных из таблицы
+  const presentation = SlidesApp.openById(data.presentationId);
+  const slideWithShape = findSlideWithShape(presentation, SLIDES_SHEET_ZONE_TAG);
+  data.sheetTemplateSlideId = slideWithShape.getObjectId()
+
+  // Заменяем теги на значения
+  replaceTemplateKeys(presentation, data);
+  return data
+}
+
+
+function replaceTemplateKeys(presentation, data) {
+  for (let key in data) {
+    const placeholder = `{{${key}}}`;
+    const replacement = data[key];
+    presentation.replaceAllText(placeholder, replacement);
+  }
+}
+
+
+function findShape(page, searchText) {
+  let shapes = page.getShapes();
+  for (let shape of shapes) {
+    if (shape.getText().asString().includes(searchText)) {
+      return shape;
+    }
+  }
+  return null;
+}
+
+function findSlideWithShape(presentation, searchText) {
+  const slides = presentation.getSlides();
+  for (let slide of slides) {
+    let shapes = slide.getShapes();
+    for (let shape of shapes) {
+      if (shape.getText().asString().includes(searchText)) {
+        return slide;
+      }
+    }
+  }
+  throw (`Не найден блок с текстом ${searchText}`)
+}
+
+
+
+function collectTemplateValues() {
+  var values = SSheet.getSheetByName(TEMPLATE_MAP).getRange("B:C").getValues()
+  var projectName = ""
+  for (var i = 0; i < values.length; i++) {
+    if (values[i][0].toString().includes("Проект")) {
+      projectName = values[i][1];
+      break
+    }
+  }
+  return {
+    sheetName: SSheet.getName(),
+    reportDate: formatDate(new Date()),
+    projectName: projectName
+  }
+}
+
+
+function formatDate(date) {
+  const months = [
+    'января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
+    'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'
+  ];
+
+  const day = date.getDate();
+  const monthIndex = date.getMonth();
+  const year = date.getFullYear();
+
+  return `${day} ${months[monthIndex]} ${year} г.`;
 }
 
 
@@ -30,35 +130,3 @@ function makeTemplateSlidesCopy(name) {
   storePresentationIdOrLink(copiedFile.getId())
   slidesTemplateLink();
 }
-
-
-function getTemplateCopyFprReport(name) {
-  var today = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd");
-  name = `Отчёт - ${today} - ${name}`
-  var copiedFile = getSlidesCopy(getPresentationId(), name)
-
-  var fileUrl = copiedFile.getUrl();
-  var fileId = copiedFile.getId();
-  return
-}
-
-function mapToSlide() {
-  const presentationId = getPresentationId()
-  const presentation = SlidesApp.openById(presentationId);
-  const slide = presentation.getSlides()[0].duplicate();
-
-  const shapes = slide.getShapes();
-  let shape
-  for (shape of shapes) {
-    if (shape.getText().asString().includes('{{sheet}}')) {
-      break
-    }
-  }
-
-  var sheet = SSheet.getSheetByName(TEMPLATE_MAP);
-  var rangeA1Notation = "A6:Q11";
-  var range = sheet.getRange(rangeA1Notation);
-
-  rangeToShape(range, shape)
-}
-

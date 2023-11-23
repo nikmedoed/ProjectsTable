@@ -177,12 +177,12 @@ function rangeToShape(range, shape) {
     })
   })
   let group = slide.group(cells);
-  groupToShape(group, shape)
+  groupToShapeProportional(group, shape)
   templateField.remove()
 }
 
 
-function groupToShape(group, shape) {
+function groupToShapeProportional(group, shape) {
   const shapeWidth = shape.getWidth();
   const shapeTop = shape.getTop();
   const shapeLeft = shape.getLeft();
