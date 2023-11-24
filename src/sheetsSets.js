@@ -20,7 +20,6 @@ function getBlockSheetNames() {
   return new Set(blockSheets.map(sheet => sheet.getName()));
 }
 
-
 function getTimelineSheets() {
   let sheets = getBlockSheets()
   if (RELEASE) {

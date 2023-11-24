@@ -143,7 +143,7 @@
       <div id="progressBar"></div>
     </div>
   </div>
-  <div id="message">рлпадшщпрдшпраыфв аф вао фыдвлпр фдлопрЫЛП РУШПР ЙУШЗГАРКЦУЗГП РЦшзг рйупзрук ш</div>
+  <div id="message"></div>
 
   <script>
     var pdfjsLib = window['pdfjs-dist/build/pdf'];
@@ -169,16 +169,28 @@
       document.getElementById('progress').style.display = 'none';
     }
 
+    function executeFunc(params) {
+      const step = steps[currentIndex];
+      google.script.run.withSuccessHandler(function (result) {
+        data = { ...data, ...result };
+        updateProgress(step);
+        currentIndex++;
+        executeStep();
+      }).withFailureHandler(handleError)[step.func](params);
+    }
+
     function executeStep() {
       if (currentIndex < steps.length) {
         const step = steps[currentIndex];
         updateProgress(step);
-        google.script.run.withSuccessHandler(function (result) {
-          data = { ...data, ...result };
-          updateProgress(step);
-          currentIndex++;
-          executeStep();
-        }).withFailureHandler(handleError)[step.func](data);
+        if (step.sheetPayload) {
+          google.script.run.withSuccessHandler(function (result) {
+            // массив pdf преобразова в пикчи и запустить дальше
+            executeFunc({ ...data, ...result })
+          }).withFailureHandler(handleError).rangeToPDFblob(step.sheetPayload);
+        } else {
+          executeFunc(data, step.payload)
+        }
       } else {
         completeProcess();
       }
@@ -188,7 +200,8 @@
       executeStep();
     };
 
-    function convertPDFtoImageAndReturnData(blobString) {
+
+    function stringToBlob(blobString) {
       var binaryData = atob(blobString);
       var arrayBuffer = new ArrayBuffer(binaryData.length);
       var view = new Uint8Array(arrayBuffer);
@@ -196,7 +209,10 @@
         view[i] = binaryData.charCodeAt(i);
       }
       var blob = new Blob([arrayBuffer], { type: 'application/pdf' });
+      return blob
+    }
 
+    function convertPDFtoImageAndReturnData(blob) {
       var fileReader = new FileReader();
       fileReader.onload = function () {
         var arrayBuffer = this.result;

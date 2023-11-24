@@ -23,6 +23,7 @@ function contentTableGenerator(data) {
     if (shape) { shape.remove(); }
   });
 
+  presentation.getSlideById(data.sheetTemplateSlideId).remove()
   return data
 }
 
