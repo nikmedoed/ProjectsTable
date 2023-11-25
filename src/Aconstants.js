@@ -5,7 +5,7 @@ const DEFAULT_VALUE = "";
 const SSheet = SpreadsheetApp.getActiveSpreadsheet();
 const RELEASE = SSheet.getId() != "1WbZsXlvklQqtlzMroRSMNnj75bis2DiAmjz3cnYspnk"
 const SLIDES_BASE_TEMPLATE = "1Q7UJHX0h_dZZQRc9Kmo_eMDW_GFTx8_MeQVNCO1JDCs"
-
+const REPORT_EMOJI = "🔀"
 
 // blockLogic numbers of columns
 const COLUMN_LEVEL = 2

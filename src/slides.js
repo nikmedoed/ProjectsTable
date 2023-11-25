@@ -1,8 +1,15 @@
 function generateReport() {
   function anotation(sheetName) {
-    let sheet = SSheet.getSheetByName(sheetName)
-    return sheet.getDataRange().getA1Notation()
+    let sheet = SSheet.getSheetByName(sheetName);
+    let lastRow = sheet.getLastRow();
+    let lastColumn = sheet.getLastColumn();
+    let data = sheet.getRange(1, 1, sheet.getLastRow(), sheet.getLastColumn()).getValues();
+    while (lastRow > 0 && data[lastRow - 1].every(cell => cell.toString().trim() === '')) {
+      lastRow--;
+    }
+    return sheet.getRange(1, 1, lastRow, lastColumn).getA1Notation();
   }
+
 
   function getBlockDataRange(sheet) {
     sheet = SSheet.getSheetByName(sheet)
@@ -36,7 +43,7 @@ function generateReport() {
       : {
         name: e[0],
         func: 'chartToSlides',
-        sheetPayload: e[1]
+        payload: e[1]
       }
   })
   let data = [
@@ -44,6 +51,10 @@ function generateReport() {
     ...sheets,
     { name: 'Генерация оглавления', func: 'contentTableGenerator' },
   ]
+
+  // Logger.log(data)
+  // dataToPlay(data)
+  // return 
 
   const template = HtmlService.createTemplateFromFile('Report');
   template.steps = JSON.stringify(data)
@@ -55,110 +66,6 @@ function generateReport() {
       .setHeight(200),
     'Генерация отчёта'
   );
-}
-
-function dataToPlay(data) {
-  const presentation = SlidesApp.openById(SLIDES_BASE_TEMPLATE);
-  const slideWithShape = findSlideWithShape(presentation, SLIDES_SHEET_ZONE_TAG);
-  const shape = findShape(slideWithShape, SLIDES_SHEET_ZONE_TAG);
-
-  rangeToPDFblob({
-    ...data[5].sheetPayload,
-    sheetTemplateSlideId: slideWithShape.getObjectId(),
-    shapeSize: [shape.getHeight(), shape.getWidth()]
-  })
-}
-
-function rangeToPDFblob(data) {
-  let [height, width] = data.shapeSize
-  let sheet = SSheet.getSheetByName(data.sheet)
-  let range = sheet.getRange(data.range)
-  let frozenRows = sheet.getFrozenRows();
-
-  var columnnum = range.getColumn();
-  var columnnum2 = range.getLastColumn();
-  var rownum = range.getRow();
-  var rownum2 = range.getLastRow();
-
-  let i
-  var sheetWidth = 0;
-  for (i = columnnum; i <= columnnum2; i++) {
-    if (!sheet.isColumnHiddenByUser(i)) {
-      sheetWidth += sheet.getColumnWidth(i);
-    }
-  }
-
-  var frozenRowsHeight = 0;
-  for (i = rownum; i <= frozenRows; i++) {
-    if (!sheet.isRowHiddenByUser(i) && !sheet.isRowHiddenByFilter(i)) {
-      frozenRowsHeight += sheet.getRowHeight(i);
-    }
-  }
-  let slideHeight = ((height * sheetWidth) / width)
-  let pdfBlobs = [];
-
-  var currentHeight = frozenRowsHeight;
-  var startRow = frozenRows + 1;
-  var rowPack = [];
-  for (i = startRow; i <= rownum2; i++) {
-    if (!sheet.isRowHiddenByUser(i) && !sheet.isRowHiddenByFilter(i)) {
-      let rowHeight = sheet.getRowHeight(i);
-      if (currentHeight + rowHeight > slideHeight) {
-        let blob = createPDFBlob(sheet.getSheetId(), rownum, columnnum, i - 1, columnnum2, sheetWidth, currentHeight);
-        pdfBlobs.push(blob);
-        rowPack.forEach(rowIndex => sheet.hideRows(rowIndex));
-        rowPack = [];
-        currentHeight = frozenRowsHeight;
-        startRow = i;
-      }
-      rowPack.push(i);
-      currentHeight += rowHeight;
-    }
-  }
-
-  if (rowPack.length > 0) {
-    let blob = createPDFBlob(sheet.getSheetId(), rownum, columnnum, rownum2, columnnum2, sheetWidth, currentHeight);
-    pdfBlobs.push(blob);
-  }
-
-  return pdfBlobs
-}
-
-
-function createPDFBlob(sheetId, l, t, b, r, width, height) {
-  var fileurl = SSheet.getUrl();
-  var ratio = 96; // get inch from pixel 
-
-  var exportUrl = fileurl.replace(/\/edit.*$/, '')
-    + '/export?exportFormat=pdf&format=pdf'
-    + '&size=' + [width, height].map(e => Number((e / ratio).toFixed(2))).join('x')
-    //A3/A4/A5/B4/B5/letter/tabloid/legal/statement/executive/folio
-    // + '&portrait=true' //false= Landscape
-    + '&scale=' + 2
-    //1= Normal 100% / 2= Fit to width / 3= Fit to height / 4= Fit to Page     
-    + '&top_margin=' + 0      //All four margins must be set!       
-    + '&bottom_margin=' + 0
-    + '&left_margin=' + 0
-    + '&right_margin=' + 0
-    + '&sheetnames=false&printtitle=false'
-    + '&pagenum=UNDEFINED' // change it to CENTER to print page numbers
-    + 'horizontal_alignment=LEFT' // //LEFT/CENTER/RIGHT
-    + '&gridlines=false'
-    + "&fmcmd=12"
-    + '&fzr=FALSE'
-    + '&gid=' + sheetId
-    + `&r1=${t - 1}&r2=${b}&c1=${l - 1}&c2=${r}`
-
-  Logger.log(exportUrl)
-
-  var blob = UrlFetchApp.fetch(
-    exportUrl,
-    { headers: { authorization: "Bearer " + ScriptApp.getOAuthToken() } }
-  ).getBlob();
-  return blob;
-  // var blobBytes = blob.getBytes();
-  // var blobString = Utilities.base64Encode(blobBytes);
-  // return blobString
 }
 
 
@@ -200,8 +107,14 @@ function projectMapSplit() {
 
 
 function chartToSlides(data) {
+  // Logger.log('chartToSlides')
+  // Logger.log(data)
+
   const presentation = SlidesApp.openById(data.presentationId);
   let slide = duplicateSlideById(presentation, data.sheetTemplateSlideId)
+  let title = `${SLIDES_CONTENT_NAME_TAG} ${data.title}`
+  findShape(slide, SLIDES_CONTENT_NAME_TAG).getText().setText(title)
+
   const shape = findShape(slide, SLIDES_SHEET_ZONE_TAG);
   let sheet = SSheet.getSheetByName(data.sheet)
   let chart = sheet.getCharts()[0]
@@ -250,7 +163,7 @@ function prepareTemplate() {
 
   // Сделали копию шаблона отчёта
   var today = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd");
-  name = `Отчёт - ${today} - ${data.sheetName}`
+  let name = `Отчёт - ${today} - ${data.sheetName}`
   var copiedFile = getSlidesCopy(getPresentationId(), name)
   data.reportUrl = copiedFile.getUrl()
   data.presentationId = copiedFile.getId()
@@ -261,11 +174,12 @@ function prepareTemplate() {
   const slideWithShape = findSlideWithShape(presentation, SLIDES_SHEET_ZONE_TAG);
   data.sheetTemplateSlideId = slideWithShape.getObjectId()
 
-  const shape = findShape(slide, SLIDES_SHEET_ZONE_TAG);
+  const shape = findShape(slideWithShape, SLIDES_SHEET_ZONE_TAG);
   data.shapeSize = [shape.getHeight(), shape.getWidth()]
 
   // Заменяем теги на значения
   replaceTemplateKeys(presentation, data);
+  switchReport(true)
   return data
 }
 

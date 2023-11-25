@@ -44,7 +44,7 @@ function onOpen() {
   ui
     .createMenu('💎 Управление проектом ')
     .addItem('📄 Сгенерировать отчёт', 'generateReport')
-    .addItem('🔀 Переключить режим отчёта', 'shitchReport')
+    .addItem('🔀 Переключить режим отчёта', 'switchReport')
     .addItem('➕ Добавить новый блок', 'createNewBlockPrompt')
     .addItem('📈 Расширить таймлайн', 'showExtendTimeline')
     .addItem('❌ Удалить блок(и)', 'showDeleteBlocks')

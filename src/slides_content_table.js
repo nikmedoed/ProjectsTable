@@ -1,5 +1,7 @@
 function contentTableGenerator(data) {
+  switchReport(false)
   let presentation = SlidesApp.openById(data.presentationId);
+  presentation.getSlideById(data.sheetTemplateSlideId).remove()
 
   let contents = collectSlidesTitles(presentation)
   const contnentMatrix = createMatrix(contents);
@@ -22,8 +24,6 @@ function contentTableGenerator(data) {
     const shape = findShape(layout, SLIDES_CONTENT_TABLE_TAG);
     if (shape) { shape.remove(); }
   });
-
-  presentation.getSlideById(data.sheetTemplateSlideId).remove()
   return data
 }
 
@@ -97,7 +97,9 @@ function collectSlidesTitles(presentation) {
       if (shape.getText) {
         const text = shape.getText().asString();
         if (text.startsWith(SLIDES_CONTENT_NAME_TAG)) {
+          shape.remove()
           const title = text.replace(SLIDES_CONTENT_NAME_TAG, "").trim();
+          if (!title) return
           const slideId = slide.getObjectId()
           if (slidesInfo.length > 0 && slidesInfo[slidesInfo.length - 1].title === title) {
             let item = slidesInfo[slidesInfo.length - 1]
@@ -110,7 +112,6 @@ function collectSlidesTitles(presentation) {
               slideIdSet: new Set([slideId])
             });
           }
-          shape.remove()
         }
       }
     });

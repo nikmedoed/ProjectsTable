@@ -1,8 +1,9 @@
-const REPORT_EMOJI = "🔀"
-
-function shitchReport() {
-  let rep =getReportState()
-  let showReport = !getReportState()
+function switchReport(forceReport) {
+  let rep = getReportState()
+  if (forceReport === rep) {
+    return
+  }
+  let showReport = !rep
 
   let blocks = getBlockSheets()
   blocks.forEach(s => hideRows(s, showReport))
@@ -24,10 +25,10 @@ function hideRows(sheet, hide = false) {
   for (var i = ROW_START - 1; i < data.length; i++) {
     if (hide) {
       if (!data[i][0]) {
-        sheet.hideRow(sheet.getRange(i+1, 1));
+        sheet.hideRow(sheet.getRange(i + 1, 1));
       }
     } else {
-      sheet.unhideRow(sheet.getRange(i+1, 1));
+      sheet.unhideRow(sheet.getRange(i + 1, 1));
     }
   }
 }

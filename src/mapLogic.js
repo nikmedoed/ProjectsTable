@@ -1,4 +1,3 @@
-
 function newBlockRow(projectMap) {
   var values = projectMap.getSheetValues(1, 1, projectMap.getLastRow(), 1);
   var rowIndexToAdd = -1;

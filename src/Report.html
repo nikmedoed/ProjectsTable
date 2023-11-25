@@ -172,7 +172,9 @@
     function executeFunc(params) {
       const step = steps[currentIndex];
       google.script.run.withSuccessHandler(function (result) {
-        data = { ...data, ...result };
+        if (result){ 
+          data = { ...data, ...result };
+        }
         updateProgress(step);
         currentIndex++;
         executeStep();
@@ -184,12 +186,18 @@
         const step = steps[currentIndex];
         updateProgress(step);
         if (step.sheetPayload) {
-          google.script.run.withSuccessHandler(function (result) {
-            // массив pdf преобразова в пикчи и запустить дальше
-            executeFunc({ ...data, ...result })
-          }).withFailureHandler(handleError).rangeToPDFblob(step.sheetPayload);
+          google.script.run.withSuccessHandler(function (pdfBlobs) {
+            Promise.all(pdfBlobs.map(blob => convertPDFtoImageAndReturnData(blob)))
+              .then(imageURIs => {
+                executeFunc({ imageURIs, ...data, ...step.sheetPayload });
+              })
+              .catch(error => {
+                handleError('Произошла ошибка во время преобразования PDF в слайд ' + error);
+              })
+          }).withFailureHandler(handleError)
+            .rangeToPDFblob({ ...data, ...step.sheetPayload })
         } else {
-          executeFunc(data, step.payload)
+          executeFunc({...data, ...step.payload})
         }
       } else {
         completeProcess();
@@ -213,32 +221,34 @@
     }
 
     function convertPDFtoImageAndReturnData(blob) {
-      var fileReader = new FileReader();
-      fileReader.onload = function () {
-        var arrayBuffer = this.result;
-        pdfjsLib.getDocument({ data: arrayBuffer }).promise.then(function (pdfDoc) {
-          pdfDoc.getPage(1).then(function (page) {
-            var viewport = page.getViewport({ scale: 4 });
-            var canvas = document.createElement('canvas');
-            var ctx = canvas.getContext('2d');
-            canvas.height = viewport.height;
-            canvas.width = viewport.width;
+      blob = stringToBlob(blob)
+      return new Promise((resolve, reject) => {
+        var fileReader = new FileReader();
+        fileReader.onload = function () {
+          var arrayBuffer = this.result;
+          pdfjsLib.getDocument({ data: arrayBuffer }).promise.then(function (pdfDoc) {
+            pdfDoc.getPage(1).then(function (page) {
+              var viewport = page.getViewport({ scale: 4 });
+              var canvas = document.createElement('canvas');
+              var ctx = canvas.getContext('2d');
+              canvas.height = viewport.height;
+              canvas.width = viewport.width;
 
-            var renderContext = {
-              canvasContext: ctx,
-              viewport: viewport
-            };
-            var renderTask = page.render(renderContext);
-            renderTask.promise.then(function () {
-              var imageURI = canvas.toDataURL();
-              google.script.run
-                .withSuccessHandler(function () { google.script.host.close(); })
-                .imageToShape(imageURI, presentationId, shapeId);
-            });
-          });
-        });
-      };
-      fileReader.readAsArrayBuffer(blob);
+              var renderContext = {
+                canvasContext: ctx,
+                viewport: viewport
+              };
+              var renderTask = page.render(renderContext);
+              renderTask.promise.then(function () {
+                var imageURI = canvas.toDataURL();
+                resolve(imageURI);
+              }).catch(reject);
+            }).catch(reject);
+          }).catch(reject);
+        };
+        fileReader.onerror = reject;
+        fileReader.readAsArrayBuffer(blob);
+      });
     }
 
   </script>
