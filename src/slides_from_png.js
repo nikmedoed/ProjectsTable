@@ -99,7 +99,7 @@ function createPDFBlob(sheetId, t, l, b, r, width, height) {
     + '&gid=' + sheetId
     + `&r1=${t - 1}&r2=${b}&c1=${l - 1}&c2=${r}`
 
-  Logger.log(exportUrl)
+  // Logger.log(exportUrl)
 
   var response = UrlFetchApp.fetch(exportUrl, {
     headers: { authorization: "Bearer " + ScriptApp.getOAuthToken() },

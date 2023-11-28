@@ -10,17 +10,18 @@ function generateReport() {
     return sheet.getRange(1, 1, lastRow, lastColumn).getA1Notation();
   }
 
-
-  function getBlockDataRange(sheet) {
-    sheet = SSheet.getSheetByName(sheet)
+  function getBlockDataRange(sheetName) {
+    sheet = SSheet.getSheetByName(sheetName)
     let borders = findTimelineBorders(sheet)
+    let lastVisible = getLastVisibleTimelineColumn(sheet, borders.startCol, borders.col)
     let last = sheet.getLastRow()
+    fixBordersOnRange(sheet.getRange(ROW_START, 1, last - ROW_START + 1, sheet.getLastColumn()), borders)
     const columnData = sheet.getRange(1, COLUMN_TASK, last, 1).getValues();
     last--
     while (!columnData[last][0]) {
       last--
     }
-    return sheet.getRange(borders.row, 1, last - borders.row + 2, borders.col).getA1Notation()
+    return sheet.getRange(borders.row, 2, last - borders.row + 2, lastVisible - 1).getA1Notation()
   }
 
   var [mapRange, risksRange] = projectMapSplit()
@@ -32,8 +33,11 @@ function generateReport() {
     ["Сбор текущих задач", { title: TEMPLORARY, sheet: TEMPLORARY, range: anotation(TEMPLORARY) }],
     ["Анализ карты проекта", { title: TEMPLATE_MAP, sheet: TEMPLATE_MAP, range: mapRange }],
     ...blocks,
-    ["Комплектация вопросов и рисков", { title: "Вопросы и риски", sheet: TEMPLATE_MAP, range: risksRange }]
-  ].map(e => {
+  ]
+  if (risksRange) {
+    sheets.push(["Комплектация вопросов и рисков", { title: "Вопросы и риски", sheet: TEMPLATE_MAP, range: risksRange }])
+  }
+  sheets = sheets.map(e => {
     return e[1].range
       ? {
         name: e[0],
@@ -69,14 +73,36 @@ function generateReport() {
 }
 
 
+function getLastVisibleTimelineColumn(sheet, startColumn, endColumn) {
+  let visibleCount = 0;
+  let lastVisibleCol = 0;
+
+  for (let col = startColumn; col <= endColumn; col++) {
+    if (!sheet.isColumnHiddenByUser(col)) {
+      visibleCount++;
+      lastVisibleCol = col;
+    }
+  }
+  if (visibleCount > 25) {
+    let message = 'На листе "' + sheet.getName() + '" отображаются более 25 колонок таймлайна';
+    SpreadsheetApp.getUi().alert(message + ", что запрещено. Скройте неактуальные колонки таймлайна.");
+    throw new Error(message);
+  }
+  return lastVisibleCol;
+}
+
 function projectMapSplit() {
   let projectMap = SSheet.getSheetByName(TEMPLATE_MAP)
   var mapValues = projectMap.getDataRange().getValues();
   var lastRow = 0;
+  var mapRange = ""
   for (var i = mapValues.length - 1; i >= 0; i--) {
     if (mapValues[i][0]) {
       lastRow = i + 1;
-      var mapRange = projectMap.getRange(1, 1, lastRow, projectMap.getLastColumn()).getA1Notation()
+      let timeline = findTimelineBorders(projectMap)
+      let lastVisible = getLastVisibleTimelineColumn(projectMap, timeline.startCol, timeline.col)
+      mapRange = projectMap.getRange(1, 1, lastRow, lastVisible).getA1Notation()
+      fixBordersOnRange(projectMap.getRange(timeline.endRow + 1, 1, lastRow - timeline.endRow, projectMap.getLastColumn()), timeline)
       break;
     }
   }
@@ -97,11 +123,14 @@ function projectMapSplit() {
       rig = Math.max(rig, col + 1);
     }
   }
+  var risksRange = ""
+  if (bot > top) {
+    rig += Math.max(...projectMap.getRange(top, rig, bot - top + 1, 1).getMergedRanges().map(e => e.getValue() ? e.getWidth() - 1 : 0))
+    bot += Math.max(...projectMap.getRange(bot, left, 1, rig - left + 1).getMergedRanges().map(e => e.getValue() ? e.getHeight() - 1 : 0))
 
-  rig += Math.max(...projectMap.getRange(top, rig, bot - top + 1, 1).getMergedRanges().map(e => e.getValue() ? e.getWidth() - 1 : 0))
-  bot += Math.max(...projectMap.getRange(bot, left, 1, rig - left + 1).getMergedRanges().map(e => e.getValue() ? e.getHeight() - 1 : 0))
+    var risksRange = projectMap.getRange(top, left, bot - top + 1, rig - left + 1).getA1Notation();
+  }
 
-  var risksRange = projectMap.getRange(top, left, bot - top + 1, rig - left + 1).getA1Notation();
   return [mapRange, risksRange]
 }
 
