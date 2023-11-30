@@ -9,7 +9,8 @@
       justify-content: center;
       align-items: center;
       height: 100vh;
-      overflow: hidden; /* Предотвращаем появление полосы прокрутки */
+      overflow: hidden;
+      /* Предотвращаем появление полосы прокрутки */
     }
 
     .date-picker {
@@ -22,14 +23,18 @@
       margin-bottom: 10px;
       display: flex;
       align-items: center;
-      justify-content: space-between; /* Выравниваем пространство между элементами */
-      width: 100%; /* Задаем ширину, чтобы использовать все доступное пространство */
+      justify-content: space-between;
+      /* Выравниваем пространство между элементами */
+      width: 100%;
+      /* Задаем ширину, чтобы использовать все доступное пространство */
     }
 
     label {
       margin-right: 10px;
-      font-weight: normal; /* Убираем жирное начертание */
-      white-space: nowrap; /* Предотвращаем перенос текста на новую строку */
+      font-weight: normal;
+      /* Убираем жирное начертание */
+      white-space: nowrap;
+      /* Предотвращаем перенос текста на новую строку */
     }
 
     h1 {
@@ -37,7 +42,8 @@
       margin-bottom: 15px;
     }
 
-    #endDate, #startDate {
+    #endDate,
+    #startDate {
       border: none;
       border-bottom: 2px solid #4285f4;
       outline: none;
@@ -47,7 +53,8 @@
       width: 130px
     }
 
-    #endDate:focus, #startDate:focus {
+    #endDate:focus,
+    #startDate:focus {
       border-bottom-color: #0f9d58;
     }
 
@@ -58,19 +65,110 @@
       padding: 10px 20px;
       border-radius: 4px;
       cursor: pointer;
-      font-size: 18px; /* Увеличиваем размер текста на кнопке */
+      font-size: 18px;
+      /* Увеличиваем размер текста на кнопке */
       transition: background-color 0.3s;
     }
 
     button:hover {
       background-color: #0f9d58;
     }
+
+
+    .spinner {
+      position: relative;
+      width: 100px;
+      height: 100px;
+      margin: 10px auto;
+    }
+
+    .spinner:before,
+    .spinner:after {
+      content: "";
+      display: block;
+      position: absolute;
+      border-width: 4px;
+      border-style: solid;
+      border-radius: 50%;
+    }
+
+    @-webkit-keyframes scale-2 {
+      0% {
+        transform: scale(0);
+        opacity: 0;
+      }
+
+      50% {
+        transform: scale(0.7);
+        opacity: 1;
+      }
+
+      100% {
+        transform: scale(1);
+        opacity: 0;
+      }
+    }
+
+    @keyframes scale-2 {
+      0% {
+        transform: scale(0);
+        opacity: 0;
+      }
+
+      50% {
+        transform: scale(0.7);
+        opacity: 1;
+      }
+
+      100% {
+        transform: scale(1);
+        opacity: 0;
+      }
+    }
+
+    @keyframes colors {
+      0% {
+        border-color: #0563C1;
+      }
+
+      33% {
+        border-color: #00B050;
+      }
+
+      66% {
+        border-color: #FFa74F;
+      }
+
+      100% {
+        border-color: #818181;
+      }
+    }
+
+    .spinner.spinner-3:before {
+      width: 98px;
+      height: 98px;
+      top: 0px;
+      left: 0px;
+      -webkit-animation: scale-2 1s linear 0s infinite;
+      animation: scale-2 1s linear 0s infinite, colors infinite 2s linear;
+      ;
+    }
+
+    .spinner.spinner-3:after {
+      width: 98px;
+      height: 98px;
+      top: 0;
+      left: 0;
+      opacity: 0;
+      -webkit-animation: scale-2 1s linear 0.5s infinite;
+      animation: scale-2 1s linear 0.5s infinite, colors infinite 2s linear;
+    }
   </style>
 </head>
 
 <body>
   <div class="date-picker">
-    <h1>Выберите новые границы</h1> <!-- Используем заголовок -->
+    <h1>Выберите новые границы</h1>
     <div class="date-row">
       <label for="startDate">Начало таймлайна:</label>
       <input type="date" id="startDate" max="<?= startDate ?>">
@@ -81,12 +179,18 @@
     </div>
     <button onclick="submitDate()">Расширить</button>
   </div>
+  <div class="spinner spinner-3" style="display: none;"></div>
   <script>
     function submitDate() {
       var start = document.getElementById("startDate").value;
       var end = document.getElementById("endDate").value;
-      google.script.run.extendTimeline(start, end);
-      google.script.host.close();
+      var datePicker = document.querySelector('.date-picker');
+      var loader = document.querySelector('.spinner');
+      datePicker.style.display = 'none';
+      loader.style.display = 'block';
+      google.script.run.withSuccessHandler(function () {
+        google.script.host.close();
+      }).extendTimeline(start, end);
     }
   </script>
 </body>

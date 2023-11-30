@@ -36,7 +36,13 @@ function createNewBlock(name, template = null, projectMap = null) {
   const newSheet = template.copyTo(SSheet);
   newSheet.setName(name);
 
-  drawDefaultTimeline(newSheet)
+  var startDate, endDate
+  let timeline = findTimelineBorders(projectMap)
+  if (!timeline.isNew) {
+    startDate = timeline.startDate
+    endDate = timeline.endDate
+  }
+  generateTimeline(newSheet, startDate, endDate)
 
   let replaces = replacePlaceholders(newSheet, {
     code: orderNumber,
@@ -134,5 +140,3 @@ function deleteSheetsAndRows(selectedNames = ['asfasdsdvafadfgadfg']) {
   }
   onBlocksChange()
 }
-
-

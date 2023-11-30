@@ -31,7 +31,7 @@ function projectInit() {
   if (RELEASE) SSheet.deleteSheet(init);
   if (RELEASE) template.hideSheet()
 
-  drawDefaultTimeline(projectMap)
+  generateTimeline(projectMap)
 
   replacePlaceholders(projectMap, dataSet)
   projectMap.showSheet()

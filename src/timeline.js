@@ -1,8 +1,3 @@
-function drawDefaultTimeline(sheet = SSheet.getSheetByName("Карта проекта (копия)")) {
-  generateTimeline(sheet)
-}
-
-
 function extendTimeline(startDate, endDate) {
   startDate = new Date(startDate);
   endDate = new Date(endDate);
@@ -11,6 +6,7 @@ function extendTimeline(startDate, endDate) {
   for (let s of getTimelineSheets()) {
     generateTimeline(s, startDate, endDate)
   }
+  fixBorders()
 }
 
 

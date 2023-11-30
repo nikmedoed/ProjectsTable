@@ -32,13 +32,6 @@ function toRelease() {
 }
 
 
-function addListAtNow() {
-  var currentDate = new Date();
-  var dateString = currentDate.toLocaleString();
-  createNewBlock(dateString)
-}
-
-
 function onOpen() {
   let ui = SpreadsheetApp.getUi()
   ui
@@ -78,6 +71,14 @@ function createNewBlockPrompt() {
 function showExtendTimeline() {
   var startDate = getTimelineStartDate();
   var endDate = getTimelineEndDate();
+
+  if (!startDate) {
+    let timeline = findTimelineBorders(SSheet.getSheetByName(TEMPLATE_MAP))
+    if (!timeline.isNew) {
+      startDate = timeline.startDate
+      endDate = timeline.endDate
+    }
+  }
 
   if (!endDate) {
     SpreadsheetApp.getUi().alert('Пока нельзя расширить таймлайн, таблица не инициализирована');

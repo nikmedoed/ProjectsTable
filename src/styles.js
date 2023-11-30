@@ -1,11 +1,12 @@
 const SOLID_HEADER_COLOR = "#B7B7B7"
-const HEADER_BACK = "#D9D9D9"
+const SOLID_GENERAL_GREY = "#CCCCCC"
 
+const HEADER_BACK = "#D9D9D9"
 const DARK_GRAY = "#333333";
 
 
 function setBorder(range) {
-  range.setBorder(true, true, true, true, true, true, SOLID_HEADER_COLOR, SpreadsheetApp.BorderStyle.SOLID);
+  range.setBorder(true, true, true, true, true, true, SOLID_GENERAL_GREY, SpreadsheetApp.BorderStyle.SOLID);
   return range
 }
 
@@ -51,14 +52,14 @@ function fixBorders() {
     if (mapValues[i][0]) {
       lastRow = i + 1;
       let timeline = findTimelineBorders(projectMap)
-      fixBordersOnRange(projectMap.getRange(timeline.endRow + 1, 1, lastRow - timeline.endRow, projectMap.getLastColumn()), timeline)
+      fixBordersOnRange(projectMap.getRange(timeline.row, 1, lastRow - timeline.row + 1, projectMap.getLastColumn()), timeline)
       break;
     }
   }
 
   getBlockSheets().forEach(sheet => {
     let = timeline = findTimelineBorders(sheet)
-    let range = sheet.getRange(ROW_START, 1, sheet.getLastRow() - ROW_START + 1, sheet.getLastColumn())
+    let range = sheet.getRange(timeline.row, 1,  sheet.getLastRow() - timeline.row + 1, sheet.getLastColumn())
     fixBordersOnRange(range, timeline)
   })
 }
@@ -69,9 +70,12 @@ function fixBordersOnRange(range, timeline) {
   if (!timeline) {
     timeline = findTimelineBorders(sheet)
   }
-  let colHei = range.getLastRow() + 1 - timeline.row
+  let colHei = range.getHeight()
   let merged = sheet.getRange(timeline.row, timeline.startCol, 1, timeline.col - timeline.startCol + 1).getMergedRanges()
-  merged.forEach(mer => { 
-    setBlockBorder(sheet.getRange(timeline.row,  mer.getColumn(), colHei, mer.getWidth()))  
+  merged.forEach(mer => {
+    if (mer.getWidth() > 1) {
+      setBlockBorder(sheet.getRange(timeline.row, mer.getColumn(), colHei, mer.getWidth()))
+    }
   })
+  setTopBorder(range)
 }
