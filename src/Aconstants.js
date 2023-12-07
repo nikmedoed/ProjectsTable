@@ -20,7 +20,7 @@ const COLUMN_PROGRESS = 9
 const ROW_START = 9
 
 // sheetssets sheet names 
-const INIT_PAGE = "Инициация";
+const INIT_PAGE = "Инициализация";
 const TEMPLATE_MAP = "Карта проекта"
 const TEMPLATE_BLOCK = "Шаблон блока";
 
@@ -39,3 +39,8 @@ const SLIDES_SHEET_ZONE_TAG = "{{sheetZone}}"
 const SLIDES_CONTENT_TABLE_TAG = "{{contentTable}}"
 const SLIDES_CONTENT_FILED_TAG = "{{contentField}}"
 const SLIDES_CONTENT_NAME_TAG = "Короткий заголовок:"
+
+
+// Условная подсветка пересечений активных задач с текущей неделей
+// =AND($H8>I$7;$H8<=J$7;I$7< TODAY();J$7>=TODAY())
+// =AND($G8<=J$7;$H8>J$7;I$7< TODAY();J$7>=TODAY())

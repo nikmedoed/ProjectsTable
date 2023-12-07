@@ -68,7 +68,7 @@ function createNewBlock(name, template = null, projectMap = null) {
     // Первая версия, не самая оптимальная
     // `=ARRAYFORMULA(FILTER('${name}'!J${dataRow}:${dataRow}; ISNUMBER('${name}'!J${dataRow - 1}:${dataRow - 1})))`
     // Оптимальная версия, но с фиксацией на первую колонкку
-    `=QUERY(${sname}!J${dataRow}:INDEX(${sname}!${dataRow}:${dataRow}; MATCH(1E+30; ${sname}!J${dataRow - 1}:${dataRow - 1})); "select *")`,
+    `=QUERY(${sname}!J${dataRow}:INDEX(${sname}!${dataRow}:${dataRow}; MATCH(1E+30; ${sname}!J${dataRow - 1}:${dataRow - 1}) + COLUMN(${sname}!J${dataRow - 1}) - 1); "select *")`,
     // Версия с точными ссылками
     // `=QUERY(INDIRECT("${sname}!J${dataRow}:" & ADDRESS(${dataRow}; MATCH(1E+30; INDIRECT("${sname}!J${dataRow - 1}:${dataRow - 1}")))); "select *")`
   ]
@@ -134,7 +134,7 @@ function deleteSheetsAndRows(selectedNames = ['asfasdsdvafadfgadfg']) {
   }
 
   if (failedToDelete.length > 0) {
-    Logger.log(`failedToDelete ${failedToDelete}`)
+    Logger.error(`failedToDelete ${failedToDelete}`)
     var message = 'Пропущены блоки:\n- ' + failedToDelete.join('\n- ') + "\n\nУдалите лист блока, затем удалите строку блока и проверьте работоспособность элементов таблицы.";
     SSheet.toast(message, 'Не получилось удалить', 10);
   }

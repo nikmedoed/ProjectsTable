@@ -33,12 +33,6 @@ function onBlockEdit(e) {
   const lastRow = row + numRows - 1;
   const DATES_COLUMNS = [COLUMN_DURATION, COLUMN_START, COLUMN_END]
 
-  if (!RELEASE) {
-    Logger.log(column, row, values)
-    Logger.log(row, values)
-    Logger.log(values)
-  }
-
   if (row < ROW_START) return;
 
   for (var i = 0; i < values.length; i++) {
@@ -84,8 +78,6 @@ function clearErrorFormula(sheet, row, column) {
     if (typeof value === 'string' && value.startsWith('#')) {
       cell.clearContent();
     }
-    console.log(value)
-    console.log(formula)
   }
 }
 
@@ -185,9 +177,6 @@ function calculateDuration(start, end) {
   return [COLUMN_DURATION, (end.getTime() - start.getTime()) / 86400000];
 }
 
-// function fixLevel(text, level = 0) {
-//   return "   ".repeat(level) + text.trim()
-// }
 
 function fixLevel(text, level = 0) {
   const words = text.trim().split(/\s+/);

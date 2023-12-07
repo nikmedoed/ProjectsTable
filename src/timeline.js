@@ -1,8 +1,6 @@
 function extendTimeline(startDate, endDate) {
   startDate = new Date(startDate);
   endDate = new Date(endDate);
-  Logger.log(startDate)
-  Logger.log(endDate)
   for (let s of getTimelineSheets()) {
     generateTimeline(s, startDate, endDate)
   }
